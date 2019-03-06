@@ -11,7 +11,7 @@
 ])
 
 (defmodule URI
-  ;(doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
+  (doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
   (defn zero []
     (URI.init
       (Maybe.Nothing)
@@ -25,8 +25,8 @@
       (Maybe.Nothing)
     ))
 
-  ;(doc default-ports "is a map of all the services that have default ports—that
-;we know of—and their port values.")
+  (doc default-ports "is a map of all the services that have default ports—that
+we know of—and their port values.")
   (def default-ports {
     @"acap" 674,
     @"afp" 548,
@@ -72,25 +72,25 @@
     @"wss" 443,
   })
 
- ; (doc default-port "gets the default `port` for the `scheme` of the URI `u`.
-;Returns 0 if it’s unknown.")
+  (doc default-port "gets the default `port` for the `scheme` of the URI `u`.
+Returns 0 if it’s unknown.")
   (defn default-port [s]
     (Maybe.from (Maybe.apply s (fn [s] (Map.get &default-ports &s))) 0))
 
-;  (doc default-port? "checks whether the `port` of the URI `u` is the default
-;port for its `scheme`.")
+  (doc default-port? "checks whether the `port` of the URI `u` is the default
+port for its `scheme`.")
   (defn default-port? [u]
     (Maybe.from (Maybe.apply @(port u) (fn [p] (= p (default-port @(scheme u)))))
                 false))
 
-;  (doc hostname "returns the host part of a URI `u`, unwrapping brackets for
-;IPv6 addresses.
-;
-;```
-;(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => ::1
-;(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => [::1]
-;```
-;")
+  (doc hostname "returns the host part of a URI `u`, unwrapping brackets for
+IPv6 addresses.
+
+```
+(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => ::1
+(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => [::1]
+```
+")
   (defn hostname [u]
     (Maybe.apply @(host u)
       (fn [h]
@@ -98,32 +98,32 @@
           (String.substring &h 1 (Int.dec (length &h)))
           h))))
 
-;  (doc full-path "returns the full path of a URI `u`.
-;
-;```
-;(def uri (URI.parse \"http://foo.com/posts?id=30&limit=5#time=1305298413\"))
-;(URI.full-path uri) ; => /posts?id=30&limit=5
-;```
-;")
+  (doc full-path "returns the full path of a URI `u`.
+
+```
+(def uri (URI.parse \"http://foo.com/posts?id=30&limit=5#time=1305298413\"))
+(URI.full-path uri) ; => /posts?id=30&limit=5
+```
+")
   (defn full-path [u]
     (let [q (Maybe.from @(query u) @"")]
       (String.concat &[(Maybe.from @(path u) @"/")
                        (if (String.empty? &q) @"" @"?")
                        q])))
 
-;  (doc absolute? "checks whether a URI `u` is absolute.")
+  (doc absolute? "checks whether a URI `u` is absolute.")
   (defn absolute? [u] (Maybe.just? (scheme u)))
-;  (doc relative? "checks whether a URI `u` is relative.")
+  (doc relative? "checks whether a URI `u` is relative.")
   (defn relative? [u] (Maybe.nothing? (scheme u)))
 
-;  (doc userinfo "returns the user-information component for a URI `u`, which
-;contains the provided username and password.
-;
-;```
-;(def uri (URI.parse \"http://admin:password@foo.com\"))
-;(URI.userinfo uri) ; => admin:password
-;```
-;")
+  (doc userinfo "returns the user-information component for a URI `u`, which
+contains the provided username and password.
+
+```
+(def uri (URI.parse \"http://admin:password@foo.com\"))
+(URI.userinfo uri) ; => admin:password
+```
+")
   (defn userinfo [u]
     (String.concat &[
       (Maybe.from @(user u) @"")
