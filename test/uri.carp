@@ -1,0 +1,40 @@
+(load "Test.carp")
+
+(load "main.carp")
+
+(use-all Maybe Test URI)
+
+(def uri "scheme://usr:pass@domain.tld:123/path?query=1")
+
+(deftest test
+  (assert-equal test
+                &(Just @"scheme")
+                (scheme &(URI.parse uri))
+                "we can parse and get the scheme correctly"
+  )
+  (assert-equal test
+                &(Just @"usr")
+                (user &(URI.parse uri))
+                "we can parse and get the user correctly"
+  )
+  (assert-equal test
+                &(Just @"pass")
+                (password &(URI.parse uri))
+                "we can parse and get the password correctly"
+  )
+  (assert-equal test
+                &(Just @"domain.tld")
+                (host &(URI.parse uri))
+                "we can parse and get the password correctly"
+  )
+  (assert-equal test
+                &(Just @"/path")
+                (path &(URI.parse uri))
+                "we can parse and get the path correctly"
+  )
+  (assert-equal test
+                &(Just @"query=1")
+                (query &(URI.parse uri))
+                "we can parse and get the query correctly"
+  )
+)

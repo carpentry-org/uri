@@ -11,6 +11,19 @@
 ])
 
 (defmodule URI
+  (defn empty []
+    (URI.init
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+      (Maybe.Nothing)
+    ))
+
   (def default-ports {
     @"acap" 674,
     @"afp" 548,
@@ -122,8 +135,112 @@
   )
 
   (defn normalize [u]
-    (assert "" "TODO"))
+    (assert (= "" "TODO")))
+)
 
+(deftype URIParser [
+  source String
+  offset Int
+])
+
+(defmodule URIParser
+  (defn from-string [s] (init @s 0))
+
+  (defn c [p] (String.char-at (source p) @(offset p)))
+  (defn nxt [p] (String.char-at (source p) (Int.inc @(offset p))))
+  (defn alpha? [p] (Char.alpha? (c p)))
+  (defn num? [p] (Char.num? (c p)))
+  (defn end? [p] (= (Int.dec (length (source p))) @(offset p)))
+  (defn end-of-host? [p] (or* (= (c p) \/) (= (c p) \?) (= (c p) \#)))
+  (defn adv [p] (update-offset @p &Int.inc))
+  (defn bck [p] (update-offset @p &Int.dec))
+  (defn from [p frm] (String.substring (source p) frm @(offset p)))
+  (defn to [p t] (String.substring (source p) @(offset p) t))
+
+  (defn parse-path [p res] res)
+  (defn parse-fragment [p res] res)
+  (defn parse-relative [p res] res)
+  (defn parse-host [p res] res)
+
+  (defn parse-userinfo [p res]
+    (let-do [pw-flag false
+             st @(offset &p)]
+      (while true
+        (cond
+          (= (c &p) \@)
+            (do
+              (set! res (parse-host (adv &p)
+                          (if pw-flag
+                            (URI.set-password @&res (Maybe.Just (from &p st)))
+                            (URI.set-user @&res (Maybe.Just (from &p st))))))
+              (break))
+          (= (c &p) \:)
+            (do
+              (set! res (URI.set-user @&res (Maybe.Just (from &p st))))
+              (set! pw-flag true)
+              (set! p (adv &p))
+              (set! st @(offset &p)))
+          (set! p (adv &p))))
+      res))
+
+  (defn parse-authority [po res]
+    (let-do [p (adv &po)
+             st @(offset &p)]
+      (while true
+        (cond
+          (= (c &p) \@)
+            (do
+              (set! res (parse-userinfo (set-offset @&p st) res))
+              (break))
+          (end-of-host? &p)
+            (do
+              (set! res (parse-host (set-offset @&p st) res))
+              (break))
+          (set! p (adv &p))))
+      res))
+
+  (defn parse-path-or-authority [p res]
+    (if (= (c &p) \/)
+      (parse-authority p res)
+      (parse-path (bck &p) res)))
+
+  (defn parse-no-scheme [p res]
+    (if (= (c &p) \#)
+      (parse-fragment p res)
+      (parse-relative (bck &p) res)))
+
+  (defn parse-scheme [p res]
+    (let-do [st @(offset &p)]
+      (while true
+        (cond
+          (or* (alpha? &p) (num? &p) (= (c &p) \-) (= (c &p) \.) (= (c &p) \+))
+            (set! p (adv &p))
+          (= (c &p) \:)
+            (do
+              (set! res (URI.set-scheme res (Maybe.Just (from &p st))))
+              (if (= (nxt &p) \/)
+                (do
+                  (set! res
+                        (parse-path-or-authority
+                          (update-offset @&p &(fn [x] (+ x 2))) res))
+                  (break))
+                (do
+      (set! res (URI.set-opaque res
+                                (Maybe.Just (from &p (Int.dec (length (source &p)))))))
+                  (break))))
+          (do
+            (set! res (parse-no-scheme (set-offset @&p 0) res))
+            (break))))
+      res))
+
+  (defn parse [p]
+    (let [res (URI.empty)]
+      (if (alpha? &p)
+        (parse-scheme p res)
+        (parse-no-scheme p res))))
+)
+
+(defmodule URI
   (defn parse [s]
-    (assert "" "TODO"))
+    (URIParser.parse (URIParser.from-string s)))
 )
