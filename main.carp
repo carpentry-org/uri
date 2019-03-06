@@ -150,17 +150,123 @@
   (defn nxt [p] (String.char-at (source p) (Int.inc @(offset p))))
   (defn alpha? [p] (Char.alpha? (c p)))
   (defn num? [p] (Char.num? (c p)))
-  (defn end? [p] (= (Int.dec (length (source p))) @(offset p)))
+  (defn end? [p] (= (length (source p)) @(offset p)))
   (defn end-of-host? [p] (or* (= (c p) \/) (= (c p) \?) (= (c p) \#)))
   (defn adv [p] (update-offset @p &Int.inc))
   (defn bck [p] (update-offset @p &Int.dec))
   (defn from [p frm] (String.substring (source p) frm @(offset p)))
   (defn to [p t] (String.substring (source p) @(offset p) t))
 
+  ; core?
+  (defn int-from-str [s]
+    (Array.reduce &(fn [acc n] (+ (* acc 10) (Char.meaning n)))
+                  0
+                  &(String.chars s)))
+
+  (defn parse-authority [p res] res)
   (defn parse-path [p res] res)
-  (defn parse-fragment [p res] res)
-  (defn parse-relative [p res] res)
-  (defn parse-host [p res] res)
+
+  (defn parse-fragment [po res]
+    (let-do [p (adv &po)
+             st @(offset &p)]
+      (while true
+        (cond
+          (end? &p)
+            (do
+              (set! res (URI.set-fragment res (Maybe.Just (from &p st))))
+              (break))
+          (set! p (adv &p))))
+      res))
+
+  (defn parse-query [po res]
+    (let-do [p (adv &po)
+             st @(offset &p)]
+      (while true
+        (cond
+          (end? &p)
+            (do
+              (set! res (URI.set-query res (Maybe.Just (from &p st))))
+              (break))
+          (= (c &p) \#)
+              (do
+                (set! res (parse-fragment @&p
+                            (URI.set-query @&res (Maybe.Just (from &p st)))))
+                (break))
+          (set! p (adv &p))))
+      res))
+
+  (defn parse-path [p res]
+    (let-do [st @(offset &p)]
+      (while true
+        (if (end? &p)
+          (do
+            (set! res (URI.set-path res (Maybe.Just (from &p st))))
+            (break))
+          (case (c &p)
+            \?
+              (do
+                (set! res (parse-query @&p
+                            (URI.set-path @&res (Maybe.Just (from &p st)))))
+                (break))
+            \#
+              (do
+                (set! res (parse-fragment @&p
+                            (URI.set-path @&res (Maybe.Just (from &p st)))))
+                (break))
+            (set! p (adv &p)))))
+      res))
+
+  (defn parse-relative-slash [p res]
+    (if (= (nxt &p) \/)
+      (parse-authority (adv &p) res)
+      (parse-path p res)))
+
+  (defn parse-relative [p res]
+    (if (end? &p)
+      res
+      (case (c &p)
+        \/ (parse-relative-slash p res)
+        \? (parse-query p res)
+        \# (parse-fragment p res)
+        (parse-path p res))))
+
+  (defn parse-port [p res]
+    (let-do [st @(offset &p)]
+      (while true
+        (cond
+          (num? &p)
+            (set! p (adv &p))
+          (end-of-host? &p)
+            (do
+              (set! res (parse-path (adv &p)
+                            (URI.set-port @&res (Maybe.Just
+                              (int-from-str &(from &p st))))))
+              (break))
+          ())) ; left here
+      res))
+
+  (defn parse-host [p res]
+    (if (= (c &p) \/)
+      (parse-path p res)
+      (let-do [bracket-flag false
+               st @(offset &p)]
+        (while true
+          (cond
+            (and (= (c &p) \:) (not bracket-flag))
+              (do
+                (set! res (parse-port (adv &p)
+                              (URI.set-host @&res (Maybe.Just (from &p st)))))
+                (break))
+            (end-of-host? &p)
+              (do
+                (set! res (parse-port (adv &p)
+                              (URI.set-host @&res (Maybe.Just (from &p st)))))
+                (break))
+            (do
+              (when (= (c &p) \[) (set! bracket-flag true))
+              (when (= (c &p) \]) (set! bracket-flag false))
+              (set! p (adv &p)))))
+        res)))
 
   (defn parse-userinfo [p res]
     (let-do [pw-flag false

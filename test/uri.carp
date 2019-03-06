@@ -4,7 +4,7 @@
 
 (use-all Maybe Test URI)
 
-(def uri "scheme://usr:pass@domain.tld:123/path?query=1")
+(def uri "scheme://usr:pass@domain.tld:123/path?query=1#fragment")
 
 (deftest test
   (assert-equal test
@@ -28,7 +28,12 @@
                 "we can parse and get the password correctly"
   )
   (assert-equal test
-                &(Just @"/path")
+                &(Just 123)
+                (port &(URI.parse uri))
+                "we can parse and get the port correctly"
+  )
+  (assert-equal test
+                &(Just @"path")
                 (path &(URI.parse uri))
                 "we can parse and get the path correctly"
   )
@@ -36,5 +41,10 @@
                 &(Just @"query=1")
                 (query &(URI.parse uri))
                 "we can parse and get the query correctly"
+  )
+  (assert-equal test
+                &(Just @"fragment")
+                (fragment &(URI.parse uri))
+                "we can parse and get the fragment correctly"
   )
 )
