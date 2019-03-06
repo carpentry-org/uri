@@ -11,7 +11,8 @@
 ])
 
 (defmodule URI
-  (defn empty []
+  ;(doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
+  (defn zero []
     (URI.init
       (Maybe.Nothing)
       (Maybe.Nothing)
@@ -24,6 +25,8 @@
       (Maybe.Nothing)
     ))
 
+  ;(doc default-ports "is a map of all the services that have default ports—that
+;we know of—and their port values.")
   (def default-ports {
     @"acap" 674,
     @"afp" 548,
@@ -69,13 +72,25 @@
     @"wss" 443,
   })
 
+ ; (doc default-port "gets the default `port` for the `scheme` of the URI `u`.
+;Returns 0 if it’s unknown.")
   (defn default-port [s]
     (Maybe.from (Maybe.apply s (fn [s] (Map.get &default-ports &s))) 0))
 
+;  (doc default-port? "checks whether the `port` of the URI `u` is the default
+;port for its `scheme`.")
   (defn default-port? [u]
     (Maybe.from (Maybe.apply @(port u) (fn [p] (= p (default-port @(scheme u)))))
                 false))
 
+;  (doc hostname "returns the host part of a URI `u`, unwrapping brackets for
+;IPv6 addresses.
+;
+;```
+;(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => ::1
+;(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => [::1]
+;```
+;")
   (defn hostname [u]
     (Maybe.apply @(host u)
       (fn [h]
@@ -83,15 +98,32 @@
           (String.substring &h 1 (Int.dec (length &h)))
           h))))
 
+;  (doc full-path "returns the full path of a URI `u`.
+;
+;```
+;(def uri (URI.parse \"http://foo.com/posts?id=30&limit=5#time=1305298413\"))
+;(URI.full-path uri) ; => /posts?id=30&limit=5
+;```
+;")
   (defn full-path [u]
     (let [q (Maybe.from @(query u) @"")]
       (String.concat &[(Maybe.from @(path u) @"/")
                        (if (String.empty? &q) @"" @"?")
                        q])))
 
+;  (doc absolute? "checks whether a URI `u` is absolute.")
   (defn absolute? [u] (Maybe.just? (scheme u)))
+;  (doc relative? "checks whether a URI `u` is relative.")
   (defn relative? [u] (Maybe.nothing? (scheme u)))
 
+;  (doc userinfo "returns the user-information component for a URI `u`, which
+;contains the provided username and password.
+;
+;```
+;(def uri (URI.parse \"http://admin:password@foo.com\"))
+;(URI.userinfo uri) ; => admin:password
+;```
+;")
   (defn userinfo [u]
     (String.concat &[
       (Maybe.from @(user u) @"")
@@ -124,9 +156,13 @@
                     @""
         )
         (Maybe.from h @"")
-        (Maybe.from (Maybe.apply p (fn [p] (if (default-port? u) @"" (str p))))
+        (Maybe.from (Maybe.apply p
+                                 (fn [p] (if (default-port? u)
+                                           @""
+                                           (String.concat &[@":" (str p)]))))
                     @""
         )
+        @"/"
         (Maybe.from pth @"")
         (Maybe.from (Maybe.apply q (fn [q] (String.concat &[@"?" q]))) @"")
         (Maybe.from (Maybe.apply f (fn [f] (String.concat &[@"#" f]))) @"")
@@ -134,8 +170,12 @@
     )
   )
 
-  (defn normalize [u]
-    (assert (= "" "TODO")))
+  (doc = "is defined as the equality of all members of URIs `u1` and `u2`.
+
+N.B.: We’re being cute by using string equality (which gets rid of differences
+between explicit/implicit port assignments). That might not always be desirable!")
+  (sig = (Fn [(Ref URI) (Ref URI)] Bool))
+  (defn = [u1 u2] (= (str (the (Ref URI) u1)) (str u2)))
 )
 
 (deftype URIParser [
@@ -168,50 +208,55 @@
 
   (defn parse-fragment [po res]
     (let-do [p (adv &po)
+             pref &p
              st @(offset &p)]
       (while true
         (cond
           (end? &p)
             (do
-              (set! res (URI.set-fragment res (Maybe.Just (from &p st))))
+              (set! res (Result.map res (fn [res]
+                (URI.set-fragment res (Maybe.Just (from pref st))))))
               (break))
           (set! p (adv &p))))
       res))
 
   (defn parse-query [po res]
     (let-do [p (adv &po)
+             pref &p
              st @(offset &p)]
       (while true
         (cond
           (end? &p)
             (do
-              (set! res (URI.set-query res (Maybe.Just (from &p st))))
+              (set! res (Result.map res (fn [res]
+                (URI.set-query res (Maybe.Just (from pref st))))))
               (break))
           (= (c &p) \#)
               (do
-                (set! res (parse-fragment @&p
-                            (URI.set-query @&res (Maybe.Just (from &p st)))))
+                (set! res (parse-fragment @pref
+                  (Result.map res (fn [res] (URI.set-query res (Maybe.Just (from pref st)))))))
                 (break))
           (set! p (adv &p))))
       res))
 
   (defn parse-path [p res]
-    (let-do [st @(offset &p)]
+    (let-do [st @(offset &p)
+             pref &p]
       (while true
         (if (end? &p)
           (do
-            (set! res (URI.set-path res (Maybe.Just (from &p st))))
+            (set! res (Result.map res (fn [res] (URI.set-path res (Maybe.Just (from pref st))))))
             (break))
           (case (c &p)
             \?
               (do
                 (set! res (parse-query @&p
-                            (URI.set-path @&res (Maybe.Just (from &p st)))))
+                  (Result.map res (fn [res] (URI.set-path res (Maybe.Just (from pref st)))))))
                 (break))
             \#
               (do
                 (set! res (parse-fragment @&p
-                            (URI.set-path @&res (Maybe.Just (from &p st)))))
+                  (Result.map res (fn [res] (URI.set-path res (Maybe.Just (from pref st)))))))
                 (break))
             (set! p (adv &p)))))
       res))
@@ -231,7 +276,8 @@
         (parse-path p res))))
 
   (defn parse-port [p res]
-    (let-do [st @(offset &p)]
+    (let-do [st @(offset &p)
+             pref &p]
       (while true
         (cond
           (num? &p)
@@ -239,28 +285,32 @@
           (end-of-host? &p)
             (do
               (set! res (parse-path (adv &p)
-                            (URI.set-port @&res (Maybe.Just
-                              (int-from-str &(from &p st))))))
+                (Result.map res (fn [res] (URI.set-port res (Maybe.Just
+                              (int-from-str &(from pref st))))))))
               (break))
-          ())) ; left here
+          (do
+            (set! res (Result.Error
+              (fmt "Invalid URI: bad port at character %d" @(offset &p))))
+            (break))))
       res))
 
   (defn parse-host [p res]
     (if (= (c &p) \/)
       (parse-path p res)
       (let-do [bracket-flag false
-               st @(offset &p)]
+               st @(offset &p)
+               pref &p]
         (while true
           (cond
             (and (= (c &p) \:) (not bracket-flag))
               (do
                 (set! res (parse-port (adv &p)
-                              (URI.set-host @&res (Maybe.Just (from &p st)))))
+                  (Result.map res (fn [res] (URI.set-host res (Maybe.Just (from pref st)))))))
                 (break))
             (end-of-host? &p)
               (do
-                (set! res (parse-port (adv &p)
-                              (URI.set-host @&res (Maybe.Just (from &p st)))))
+                (set! res (parse-path (adv &p)
+                  (Result.map res (fn [res] (URI.set-host res (Maybe.Just (from pref st)))))))
                 (break))
             (do
               (when (= (c &p) \[) (set! bracket-flag true))
@@ -270,19 +320,21 @@
 
   (defn parse-userinfo [p res]
     (let-do [pw-flag false
-             st @(offset &p)]
+             st @(offset &p)
+             pref &p]
       (while true
         (cond
           (= (c &p) \@)
             (do
               (set! res (parse-host (adv &p)
-                          (if pw-flag
-                            (URI.set-password @&res (Maybe.Just (from &p st)))
-                            (URI.set-user @&res (Maybe.Just (from &p st))))))
+                (Result.map res (fn [res]
+                  (if pw-flag
+                    (URI.set-password res (Maybe.Just (from pref st)))
+                    (URI.set-user res (Maybe.Just (from pref st))))))))
               (break))
           (= (c &p) \:)
             (do
-              (set! res (URI.set-user @&res (Maybe.Just (from &p st))))
+              (set! res (Result.map res (fn [res] (URI.set-user res (Maybe.Just (from pref st))))))
               (set! pw-flag true)
               (set! p (adv &p))
               (set! st @(offset &p)))
@@ -316,14 +368,15 @@
       (parse-relative (bck &p) res)))
 
   (defn parse-scheme [p res]
-    (let-do [st @(offset &p)]
+    (let-do [st @(offset &p)
+             pref &p]
       (while true
         (cond
           (or* (alpha? &p) (num? &p) (= (c &p) \-) (= (c &p) \.) (= (c &p) \+))
             (set! p (adv &p))
           (= (c &p) \:)
             (do
-              (set! res (URI.set-scheme res (Maybe.Just (from &p st))))
+              (set! res (Result.map res (fn [res] (URI.set-scheme res (Maybe.Just (from pref st))))))
               (if (= (nxt &p) \/)
                 (do
                   (set! res
@@ -331,8 +384,8 @@
                           (update-offset @&p &(fn [x] (+ x 2))) res))
                   (break))
                 (do
-      (set! res (URI.set-opaque res
-                                (Maybe.Just (from &p (Int.dec (length (source &p)))))))
+                  (set! res (Result.map res (fn [res] (URI.set-opaque res
+                      (Maybe.Just (from pref (Int.dec (length (source pref)))))))))
                   (break))))
           (do
             (set! res (parse-no-scheme (set-offset @&p 0) res))
@@ -340,13 +393,19 @@
       res))
 
   (defn parse [p]
-    (let [res (URI.empty)]
+    (let [res (Result.Success (URI.zero))]
       (if (alpha? &p)
         (parse-scheme p res)
         (parse-no-scheme p res))))
 )
 
 (defmodule URI
+  (doc parse "Parses a URI from a string `s`.")
   (defn parse [s]
     (URIParser.parse (URIParser.from-string s)))
+)
+
+(defmodule URICopy
+  (defn = [u1 u2]
+    (URI.= &u1 &u2))
 )

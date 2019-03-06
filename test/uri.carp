@@ -2,49 +2,60 @@
 
 (load "main.carp")
 
-(use-all Maybe Test URI)
+(use-all Maybe Test URI Result)
 
 (def uri "scheme://usr:pass@domain.tld:123/path?query=1#fragment")
 
 (deftest test
   (assert-equal test
                 &(Just @"scheme")
-                (scheme &(URI.parse uri))
+                (scheme &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the scheme correctly"
   )
   (assert-equal test
                 &(Just @"usr")
-                (user &(URI.parse uri))
+                (user &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the user correctly"
   )
   (assert-equal test
                 &(Just @"pass")
-                (password &(URI.parse uri))
+                (password &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the password correctly"
   )
   (assert-equal test
                 &(Just @"domain.tld")
-                (host &(URI.parse uri))
+                (host &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the password correctly"
   )
   (assert-equal test
                 &(Just 123)
-                (port &(URI.parse uri))
+                (port &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the port correctly"
   )
   (assert-equal test
                 &(Just @"path")
-                (path &(URI.parse uri))
+                (path &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the path correctly"
   )
   (assert-equal test
                 &(Just @"query=1")
-                (query &(URI.parse uri))
+                (query &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the query correctly"
   )
   (assert-equal test
                 &(Just @"fragment")
-                (fragment &(URI.parse uri))
+                (fragment &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the fragment correctly"
+  )
+  (assert-equal test
+                uri
+                &(str &(unsafe-from-success (URI.parse uri)))
+                "we can convert our representation to a string again correctly"
+  )
+  (assert-equal test
+                &(Error @"Invalid URI: bad port at character 20")
+                &(URI.parse "https://domain.tld:1ab3/")
+
+                "invalid ports lead to errors"
   )
 )

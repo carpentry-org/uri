@@ -1,0 +1,13 @@
+(load "main.carp")
+
+(defdynamic gendocs []
+       (do
+         (Project.config "title" "URI")
+         (Project.config "docs-directory" "./docs/")
+         (Project.config "docs-logo" "")
+         (Project.config "docs-url" "https://github.com/carpentry-org/uri")
+         (Project.config "docs-styling" "style.css")
+         (save-docs URI)))
+
+(gendocs)
+(quit)
