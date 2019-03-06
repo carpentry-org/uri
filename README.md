@@ -4,7 +4,7 @@ A `URI` datatype and parser for Carp.
 
 ## Installation
 
-````clojure
+```clojure
 (load "git@github.com:carpentry-org/uri@0.0.1
 ```
 
