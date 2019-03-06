@@ -23,6 +23,13 @@ URI parameters.
 
 A more complete documentation can be found under [https://veitheller.de/uri/](https://veitheller.de/uri)!
 
+## Acknowledgements
+
+This datatype and parser was heavily inspired by the one in [the Crystal
+standard library](https://github.com/crystal-lang/crystal/blob/master/src/uri.cr).
+I cannot thank the people who worked on it enough; they saved me from going
+through a lot of pain and suffering!
+
 <hr/>
 
 Have fun!
