@@ -11,6 +11,11 @@ a {
     color: #f00;
 }
 
+pre {
+    background: #eee;
+    padding: 10px;
+}
+
 .logo {
     display: none;
 }

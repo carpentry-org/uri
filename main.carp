@@ -87,8 +87,8 @@ port for its `scheme`.")
 IPv6 addresses.
 
 ```
-(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => ::1
-(URI.hostname (URI.parse \"http://[::1]/bar\")) ; => [::1]
+(URI.hostname &(URI.parse \"http://[::1]/bar\")) ; => ::1
+(URI.hostname &(URI.parse \"http://[::1]/bar\")) ; => [::1]
 ```
 ")
   (defn hostname [u]
@@ -102,7 +102,7 @@ IPv6 addresses.
 
 ```
 (def uri (URI.parse \"http://foo.com/posts?id=30&limit=5#time=1305298413\"))
-(URI.full-path uri) ; => /posts?id=30&limit=5
+(URI.full-path &uri) ; => /posts?id=30&limit=5
 ```
 ")
   (defn full-path [u]
@@ -121,7 +121,7 @@ contains the provided username and password.
 
 ```
 (def uri (URI.parse \"http://admin:password@foo.com\"))
-(URI.userinfo uri) ; => admin:password
+(URI.userinfo &uri) ; => admin:password
 ```
 ")
   (defn userinfo [u]
@@ -131,6 +131,14 @@ contains the provided username and password.
       (Maybe.from @(password u) @"")
     ]))
 
+  (doc str "prints the URL `u` as idempotently as possible, i.e. as the parsed
+string.
+
+```
+(def uri (URI.parse \"http://admin:password@foo.com\"))
+(URI.str &uri) ; => \"http://admin:password@foo.com\"
+```
+")
   (defn str [u]
     (let [s @(scheme u)
           o @(opaque u)
@@ -262,9 +270,11 @@ between explicit/implicit port assignments). That might not always be desirable!
       res))
 
   (defn parse-relative-slash [p res]
-    (if (= (nxt &p) \/)
-      (parse-authority (adv &p) res)
-      (parse-path p res)))
+    (if (end? &p)
+      res
+      (if (= (nxt &p) \/)
+        (parse-authority (adv &p) res)
+        (parse-path p res))))
 
   (defn parse-relative [p res]
     (if (end? &p)
@@ -365,7 +375,7 @@ between explicit/implicit port assignments). That might not always be desirable!
   (defn parse-no-scheme [p res]
     (if (= (c &p) \#)
       (parse-fragment p res)
-      (parse-relative (bck &p) res)))
+      (parse-relative p res)))
 
   (defn parse-scheme [p res]
     (let-do [st @(offset &p)
