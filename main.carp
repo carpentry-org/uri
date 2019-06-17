@@ -274,7 +274,7 @@ between explicit/implicit port assignments). That might not always be desirable!
       res
       (if (= (nxt &p) \/)
         (parse-authority (adv &p) res)
-        (parse-path p res))))
+        (parse-path (adv &p) res))))
 
   (defn parse-relative [p res]
     (if (end? &p)

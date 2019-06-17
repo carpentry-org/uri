@@ -53,6 +53,11 @@
                 "we can convert our representation to a string again correctly"
   )
   (assert-equal test
+                &(Just @"")
+                (path &(unsafe-from-success (URI.parse "/")))
+                "we can parse relative URIs"
+  )
+  (assert-equal test
                 &(Error @"Invalid URI: bad port at character 20")
                 &(URI.parse "https://domain.tld:1ab3/")
 
