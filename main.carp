@@ -75,12 +75,12 @@ we know of—and their port values.")
   (doc default-port "gets the default `port` for the `scheme` of the URI `u`.
 Returns 0 if it’s unknown.")
   (defn default-port [s]
-    (Maybe.from (Maybe.apply s (fn [s] (Map.get &default-ports &s))) 0))
+    (Maybe.from (Maybe.apply s &(fn [s] (Map.get &default-ports &s))) 0))
 
   (doc default-port? "checks whether the `port` of the URI `u` is the default
 port for its `scheme`.")
   (defn default-port? [u]
-    (Maybe.from (Maybe.apply @(port u) (fn [p] (= p (default-port @(scheme u)))))
+    (Maybe.from (Maybe.apply @(port u) &(fn [p] (= p (default-port @(scheme u)))))
                 false))
 
   (doc hostname "returns the host part of a URI `u`, unwrapping brackets for
@@ -93,7 +93,7 @@ IPv6 addresses.
 ")
   (defn hostname [u]
     (Maybe.apply @(host u)
-      (fn [h]
+      &(fn [h]
         (if (and (String.starts-with? &h "[") (String.ends-with? &h "]"))
           (String.substring &h 1 (Int.dec (length &h)))
           h))))
@@ -151,7 +151,7 @@ string.
          ]
       (String.concat &[
         (Maybe.from (Maybe.apply s
-                        (fn [s] (String.concat &[
+                        &(fn [s] (String.concat &[
                                     s
                                     @":"
                                     @(if (Maybe.just? &o) "" "//")
@@ -160,20 +160,20 @@ string.
         )
         (Maybe.from o @"")
         (Maybe.from (Maybe.apply usr
-                                 (fn [usr] (String.concat &[(userinfo u) @"@"])))
+                                 &(fn [usr] (String.concat &[(userinfo u) @"@"])))
                     @""
         )
         (Maybe.from h @"")
         (Maybe.from (Maybe.apply p
-                                 (fn [p] (if (default-port? u)
+                                 &(fn [p] (if (default-port? u)
                                            @""
                                            (String.concat &[@":" (str p)]))))
                     @""
         )
         @"/"
         (Maybe.from pth @"")
-        (Maybe.from (Maybe.apply q (fn [q] (String.concat &[@"?" q]))) @"")
-        (Maybe.from (Maybe.apply f (fn [f] (String.concat &[@"#" f]))) @"")
+        (Maybe.from (Maybe.apply q &(fn [q] (String.concat &[@"?" q]))) @"")
+        (Maybe.from (Maybe.apply f &(fn [f] (String.concat &[@"#" f]))) @"")
       ])
     )
   )
@@ -222,7 +222,7 @@ between explicit/implicit port assignments). That might not always be desirable!
         (cond
           (end? &p)
             (do
-              (set! res (Result.map res (fn [res]
+              (set! res (Result.map res &(fn [res]
                 (URI.set-fragment res (Maybe.Just (from pref st))))))
               (break))
           (set! p (adv &p))))
@@ -236,13 +236,13 @@ between explicit/implicit port assignments). That might not always be desirable!
         (cond
           (end? &p)
             (do
-              (set! res (Result.map res (fn [res]
+              (set! res (Result.map res &(fn [res]
                 (URI.set-query res (Maybe.Just (from pref st))))))
               (break))
           (= (c &p) \#)
               (do
                 (set! res (parse-fragment @pref
-                  (Result.map res (fn [res] (URI.set-query res (Maybe.Just (from pref st)))))))
+                  (Result.map res &(fn [res] (URI.set-query res (Maybe.Just (from pref st)))))))
                 (break))
           (set! p (adv &p))))
       res))
@@ -253,18 +253,18 @@ between explicit/implicit port assignments). That might not always be desirable!
       (while true
         (if (end? &p)
           (do
-            (set! res (Result.map res (fn [res] (URI.set-path res (Maybe.Just (from pref st))))))
+            (set! res (Result.map res &(fn [res] (URI.set-path res (Maybe.Just (from pref st))))))
             (break))
           (case (c &p)
             \?
               (do
                 (set! res (parse-query @&p
-                  (Result.map res (fn [res] (URI.set-path res (Maybe.Just (from pref st)))))))
+                  (Result.map res &(fn [res] (URI.set-path res (Maybe.Just (from pref st)))))))
                 (break))
             \#
               (do
                 (set! res (parse-fragment @&p
-                  (Result.map res (fn [res] (URI.set-path res (Maybe.Just (from pref st)))))))
+                  (Result.map res &(fn [res] (URI.set-path res (Maybe.Just (from pref st)))))))
                 (break))
             (set! p (adv &p)))))
       res))
@@ -295,7 +295,7 @@ between explicit/implicit port assignments). That might not always be desirable!
           (end-of-host? &p)
             (do
               (set! res (parse-path (adv &p)
-                (Result.map res (fn [res] (URI.set-port res (Maybe.Just
+                (Result.map res &(fn [res] (URI.set-port res (Maybe.Just
                               (int-from-str &(from pref st))))))))
               (break))
           (do
@@ -315,12 +315,12 @@ between explicit/implicit port assignments). That might not always be desirable!
             (and (= (c &p) \:) (not bracket-flag))
               (do
                 (set! res (parse-port (adv &p)
-                  (Result.map res (fn [res] (URI.set-host res (Maybe.Just (from pref st)))))))
+                  (Result.map res &(fn [res] (URI.set-host res (Maybe.Just (from pref st)))))))
                 (break))
             (end-of-host? &p)
               (do
                 (set! res (parse-path (adv &p)
-                  (Result.map res (fn [res] (URI.set-host res (Maybe.Just (from pref st)))))))
+                  (Result.map res &(fn [res] (URI.set-host res (Maybe.Just (from pref st)))))))
                 (break))
             (do
               (when (= (c &p) \[) (set! bracket-flag true))
@@ -337,14 +337,14 @@ between explicit/implicit port assignments). That might not always be desirable!
           (= (c &p) \@)
             (do
               (set! res (parse-host (adv &p)
-                (Result.map res (fn [res]
+                (Result.map res &(fn [res]
                   (if pw-flag
                     (URI.set-password res (Maybe.Just (from pref st)))
                     (URI.set-user res (Maybe.Just (from pref st))))))))
               (break))
           (= (c &p) \:)
             (do
-              (set! res (Result.map res (fn [res] (URI.set-user res (Maybe.Just (from pref st))))))
+              (set! res (Result.map res &(fn [res] (URI.set-user res (Maybe.Just (from pref st))))))
               (set! pw-flag true)
               (set! p (adv &p))
               (set! st @(offset &p)))
@@ -386,7 +386,7 @@ between explicit/implicit port assignments). That might not always be desirable!
             (set! p (adv &p))
           (= (c &p) \:)
             (do
-              (set! res (Result.map res (fn [res] (URI.set-scheme res (Maybe.Just (from pref st))))))
+              (set! res (Result.map res &(fn [res] (URI.set-scheme res (Maybe.Just (from pref st))))))
               (if (= (nxt &p) \/)
                 (do
                   (set! res
@@ -394,7 +394,7 @@ between explicit/implicit port assignments). That might not always be desirable!
                           (update-offset @&p &(fn [x] (+ x 2))) res))
                   (break))
                 (do
-                  (set! res (Result.map res (fn [res] (URI.set-opaque res
+                  (set! res (Result.map res &(fn [res] (URI.set-opaque res
                       (Maybe.Just (from pref (Int.dec (length (source pref)))))))))
                   (break))))
           (do
