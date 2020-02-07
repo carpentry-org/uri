@@ -131,6 +131,27 @@ contains the provided username and password.
       (Maybe.from @(password u) @"")
     ]))
 
+  (doc query-map "parses the querystring as a `Map` and returns it.
+
+It can fail if the querystring is malformed, and will then return an `Error`.")
+  (defn query-map [u]
+    (match @(query u)
+      (Maybe.Nothing) (Result.Success {})
+      (Maybe.Just s)
+        (if (= &s "")
+          (Result.Success {})
+          (Array.reduce
+            &(fn [a x]
+              (match a
+                (Result.Error err) (Result.Error err)
+                (Result.Success m)
+                  (let [splt (split-by x &[\=])]
+                    (if (= (Array.length &splt) 2)
+                      (Result.Success (Map.put m &(Array.unsafe-first &splt) (Array.unsafe-nth &splt 1)))
+                      (Result.Error (fmt "Query parameter %s malformed." x))))))
+            (Result.Success {})
+            &(split-by &s &[\&])))))
+
   (doc str "prints the URL `u` as idempotently as possible, i.e. as the parsed
 string.
 

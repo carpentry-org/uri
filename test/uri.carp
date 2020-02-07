@@ -43,6 +43,11 @@
                 "we can parse and get the query correctly"
   )
   (assert-equal test
+                &{@"query" @"1"}
+                &(unsafe-from-success (query-map &(unsafe-from-success (URI.parse uri))))
+                "we can parse and get the query correctly as a map"
+  )
+  (assert-equal test
                 &(Just @"fragment")
                 (fragment &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the fragment correctly"
