@@ -13,7 +13,7 @@
                     <img src="logo.png">
                 </a>
                 <div class="title">
-                    URI
+                    uri
                 </div>
                 <div class="index">
                     <ul>
@@ -28,6 +28,30 @@
             <h1>
                 URI
             </h1>
+            <div class="module-description">
+                <p>is a simple <code>URI</code> datatype and parser for Carp.</p>
+<h2>Installation</h2>
+<pre><code>(load &quot;git@github.com:carpentry-org/uri@0.0.3&quot;)
+</code></pre>
+<h2>Usage</h2>
+<p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
+so, you use <code>URI.parse</code>. This function will return a <code>URI</code> datatype for you to
+work with, or an error type if the URI string was invalid.</p>
+<p>If you havea a URI value the simplest operation is probably converting the URI
+back to a string using the <code>str</code> interface, which should be idempotent—i.e.
+you’ll get the original URI back.</p>
+<p>You can also ask the <code>URI</code> for its properties, like the scheme, the port, or
+the URI parameters.</p>
+<h2>Acknowledgements</h2>
+<p>This datatype and parser was heavily inspired by the one in <a href="https://github.com/crystal-lang/crystal/blob/master/src/uri.cr">the Crystal
+standard
+library</a>.
+I cannot thank the people who worked on it enough; they saved me from going
+through a lot of pain and suffering!</p>
+<p>Similarly, <a href="https://github.com/andrewchambers/janet-uri/">Janet’s URI library</a>
+inspired the escaping and unescaping mechanisms.</p>
+
+            </div>
             <div class="binder">
                 <a class="anchor" href="#=">
                     <h3 id="=">
@@ -38,7 +62,7 @@
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), a] Bool)
+                    (λ [(Ref URI a), b] Bool)
                 </p>
                 <pre class="args">
                     (= u1 u2)
@@ -46,7 +70,8 @@
                 <p class="doc">
                     <p>is defined as the equality of all members of URIs <code>u1</code> and <code>u2</code>.</p>
 <p>N.B.: We’re being cute by using string equality (which gets rid of differences
-between explicit/implicit port assignments). That might not always be desirable!</p>
+between explicit/implicit port assignments). That might not always be
+desirable—and can be fairly slow.</p>
 
                 </p>
             </div>
@@ -60,7 +85,7 @@ between explicit/implicit port assignments). That might not always be desirable!
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] Bool)
+                    (λ [(Ref URI a)] Bool)
                 </p>
                 <pre class="args">
                     (absolute? u)
@@ -80,13 +105,14 @@ between explicit/implicit port assignments). That might not always be desirable!
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] URI)
+                    (λ [(Ref URI a)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>copies a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -120,7 +146,7 @@ Returns 0 if it’s unknown.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] Bool)
+                    (λ [(Ref URI a)] Bool)
                 </p>
                 <pre class="args">
                     (default-port? u)
@@ -153,6 +179,26 @@ we know of—and their port values.</p>
                 </p>
             </div>
             <div class="binder">
+                <a class="anchor" href="#escape">
+                    <h3 id="escape">
+                        escape
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [(Ref String a)] String)
+                </p>
+                <pre class="args">
+                    (escape s)
+                </pre>
+                <p class="doc">
+                    <p>URI unescapes the string <code>s</code>.</p>
+
+                </p>
+            </div>
+            <div class="binder">
                 <a class="anchor" href="#fragment">
                     <h3 id="fragment">
                         fragment
@@ -162,13 +208,14 @@ we know of—and their port values.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>fragment</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -181,7 +228,7 @@ we know of—and their port values.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] String)
+                    (λ [(Ref URI a)] String)
                 </p>
                 <pre class="args">
                     (full-path u)
@@ -204,13 +251,14 @@ we know of—and their port values.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>host</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -223,7 +271,7 @@ we know of—and their port values.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Maybe String))
+                    (λ [(Ref URI a)] (Maybe String))
                 </p>
                 <pre class="args">
                     (hostname u)
@@ -253,7 +301,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>creates a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -266,13 +315,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>opaque</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -285,7 +335,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [&amp;String] (Result URI String))
+                    (λ [(Ref String a)] (Result URI String))
                 </p>
                 <pre class="args">
                     (parse s)
@@ -305,13 +355,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>password</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -324,13 +375,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>path</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -343,13 +395,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe Int)))
+                    (λ [(Ref URI a)] (Ref (Maybe Int) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>port</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -362,13 +415,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] String)
+                    (λ [(Ref URI a)] String)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>converts a <code>URI</code> to a string.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -381,13 +435,35 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>query</code> property of a <code>URI</code>.</p>
+
+                </p>
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#query-map">
+                    <h3 id="query-map">
+                        query-map
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [(Ref URI a)] (Result (Map String String) String))
+                </p>
+                <pre class="args">
+                    (query-map u)
+                </pre>
+                <p class="doc">
+                    <p>parses the querystring as a <code>Map</code> and returns it.</p>
+<p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -400,7 +476,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] Bool)
+                    (λ [(Ref URI a)] Bool)
                 </p>
                 <pre class="args">
                     (relative? u)
@@ -420,13 +496,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>scheme</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -445,7 +522,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>fragment</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -458,13 +536,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>fragment</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -483,7 +562,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>host</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -496,13 +576,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>host</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -521,7 +602,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>opaque</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -534,13 +616,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>opaque</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -559,7 +642,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>password</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -572,13 +656,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>password</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -597,7 +682,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>path</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -610,13 +696,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>path</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -635,7 +722,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>port</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -648,13 +736,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe Int)] ())
+                    (λ [(Ref URI a), (Maybe Int)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>port</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -673,7 +762,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>query</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -686,13 +776,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>query</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -711,7 +802,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>scheme</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -724,13 +816,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>scheme</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -749,7 +842,8 @@ IPv6 addresses.</p>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>user</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -762,13 +856,14 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI), (Maybe String)] ())
+                    (λ [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>sets the <code>user</code> property of a <code>URI</code> in place.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -781,7 +876,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] String)
+                    (λ [(Ref URI a)] String)
                 </p>
                 <pre class="args">
                     (str u)
@@ -796,6 +891,25 @@ string.</p>
                 </p>
             </div>
             <div class="binder">
+                <a class="anchor" href="#unescape">
+                    <h3 id="unescape">
+                        unescape
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [(Ref String a)] String)
+                </p>
+                <pre class="args">
+                    (unescape s)
+                </pre>
+                <p class="doc">
+                    
+                </p>
+            </div>
+            <div class="binder">
                 <a class="anchor" href="#update-fragment">
                     <h3 id="update-fragment">
                         update-fragment
@@ -805,13 +919,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>fragment</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -824,13 +939,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>host</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -843,13 +959,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>opaque</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -862,13 +979,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>password</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -881,13 +999,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>path</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -900,13 +1019,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe Int)] (Maybe Int)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe Int)] (Maybe Int) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>port</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -919,13 +1039,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>query</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -938,13 +1059,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>scheme</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -957,13 +1079,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String)))] URI)
+                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>updates the <code>user</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -976,13 +1099,14 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] (Ref (Maybe String)))
+                    (λ [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
                 </span>
                 <p class="doc">
-                    
+                    <p>gets the <code>user</code> property of a <code>URI</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -995,7 +1119,7 @@ string.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI)] String)
+                    (λ [(Ref URI a)] String)
                 </p>
                 <pre class="args">
                     (userinfo u)

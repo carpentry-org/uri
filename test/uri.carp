@@ -52,15 +52,27 @@
                 (fragment &(unsafe-from-success (URI.parse uri)))
                 "we can parse and get the fragment correctly"
   )
-  (assert-equal test
-                uri
-                &(str &(unsafe-from-success (URI.parse uri)))
-                "we can convert our representation to a string again correctly"
+  (let [s &(str &(unsafe-from-success (URI.parse uri)))]
+    (assert-equal test
+                  uri
+                  s
+                  "we can convert our representation to a string again correctly"
+    )
   )
   (assert-equal test
                 &(Just @"")
                 (path &(unsafe-from-success (URI.parse "/")))
                 "we can parse relative URIs"
+  )
+  (assert-equal test
+                "abcd%20efg"
+                &(escape "abcd efg")
+                "we can escape URIs"
+  )
+  (assert-equal test
+                "abcd efg"
+                &(unescape "abcd%20efg")
+                "we can unescape URIs"
   )
   (assert-equal test
                 &(Error @"Invalid URI: bad port at character 20")
