@@ -87,7 +87,7 @@ IPv6 addresses.
     (apply @(host u)
       &(fn [h]
         (if (and (starts-with? &h "[") (ends-with? &h "]"))
-          (substring &h 1 (Int.dec (length &h)))
+          (slice &h 1 (Int.dec (length &h)))
           h))))
 
   (doc full-path "returns the full path of a URI `u`.
@@ -272,8 +272,8 @@ desirable—and can be fairly slow.")
   (defn end-of-host? [p] (or* (= (c p) \/) (= (c p) \?) (= (c p) \#)))
   (defn adv [p] (update-offset @p &inc))
   (defn bck [p] (update-offset @p &dec))
-  (defn from [p frm] (substring (source p) frm @(offset p)))
-  (defn to [p t] (substring (source p) @(offset p) t))
+  (defn from [p frm] (slice (source p) frm @(offset p)))
+  (defn to [p t] (slice (source p) @(offset p) t))
 
   (defn parse-authority [p res] res)
   (defn parse-path [p res] res)
