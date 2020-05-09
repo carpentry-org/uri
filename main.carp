@@ -99,7 +99,7 @@ IPv6 addresses.
 ")
   (defn full-path [u]
     (let [q (from @(query u) @"")]
-      (concat &[(from @(path u) @"/") (if (empty? &q) @"" @"?") q])))
+      (concat &[(from @(path u) @"/") (if (String.empty? &q) @"" @"?") q])))
 
   (doc absolute? "checks whether a URI `u` is absolute.")
   (defn absolute? [u] (just? (scheme u)))
@@ -215,41 +215,41 @@ desirable—and can be fairly slow.")
 
   (doc escape "URI escapes the string `s`.")
   (defn escape [s]
-    (let-do [a (repeat (* (length s) 3) &zero)
+    (let-do [a (Array.repeat (* (length s) 3) &zero)
              cs (chars s)
              idx 0]
-      (for [i 0 (length &cs)]
-        (let [c (unsafe-nth &cs i)]
+      (for [i 0 (Array.length &cs)]
+        (let [c (Array.unsafe-nth &cs i)]
           (if (unreserved? @c)
             (do
-              (aset! &a idx @c)
+              (Array.aset! &a idx @c)
               (set! idx (inc idx)))
             (let-do [i (to-int @c)]
-              (aset! &a idx \%)
+              (Array.aset! &a idx \%)
               (set! idx (inc idx))
-              (aset! &a idx
-                     @(unsafe-nth &chartab (bit-shift-right (bit-and i 240) 4)))
+              (Array.aset! &a idx
+                            @(Array.unsafe-nth &chartab (bit-shift-right (bit-and i 240) 4)))
               (set! idx (inc idx))
-              (aset! &a idx @(unsafe-nth &chartab (bit-and i 15)))
+              (Array.aset! &a idx @(Array.unsafe-nth &chartab (bit-and i 15)))
               (set! idx (inc idx))))))
       (from-chars &a)))
 
   (doc escape "URI unescapes the string `s`.")
   (defn unescape [s]
-    (let-do [a (repeat (* (length s) 3) &zero)
+    (let-do [a (Array.repeat (* (length s) 3) &zero)
              n 0
              cs (chars s)]
-      (for [i 0 (length &cs)]
-        (let-do [c @(unsafe-nth &cs i)]
+      (for [i 0 (Array.length &cs)]
+        (let-do [c @(Array.unsafe-nth &cs i)]
           (if (= \% c)
             (do
-              (aset! &a n
+              (Array.aset! &a n
                      (from-int
                        (bit-or
-                         (bit-shift-left (decode-nibble @(unsafe-nth &cs (inc i))) 4)
-                         (decode-nibble @(unsafe-nth &cs (+ i 2))))))
+                         (bit-shift-left (decode-nibble @(Array.unsafe-nth &cs (inc i))) 4)
+                         (decode-nibble @(Array.unsafe-nth &cs (+ i 2))))))
               (set! i (+ i 2)))
-            (aset! &a n c))
+            (Array.aset! &a n c))
           (set! n (inc n))))
       (from-chars &a)))
 )
@@ -478,7 +478,7 @@ desirable—and can be fairly slow.")
 ## Installation
 
 ```
-(load \"git@github.com:carpentry-org/uri@0.0.6\")
+(load \"git@github.com:carpentry-org/uri@0.0.7\")
 ```
 
 ## Usage
