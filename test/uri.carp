@@ -51,6 +51,12 @@
                     "we can parse and get the query correctly as a map"
       )
       (assert-equal test
+                    &{@"key-one" @"val-one"
+                      @"key2"    @"val2"}
+                    &(unsafe-from-success (query-map-from-str @"key-one=val-one&key2=val2"))
+                    "we can parse and get the query correctly as a map from a string"
+      )
+      (assert-equal test
                     &(Just @"fragment")
                     (fragment &(unsafe-from-success (URI.parse uri)))
                     "we can parse and get the fragment correctly"
