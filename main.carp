@@ -10,9 +10,9 @@
   opaque (Maybe String)
 ])
 
-(defmodule URI
-  (use-all Array Int Maybe Result)
+(use-all Array Int Maybe Result)
 
+(defmodule URI
   (doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
   (defn zero []
     (URI.init (Nothing) (Nothing) (Nothing) (Nothing) (Nothing) (Nothing)
@@ -125,7 +125,7 @@ contains the provided username and password.
 
 It can fail if the querystring is malformed, and will then return an `Error`.")
   (defn query-map-from-str [s]
-    (if (= &s "")
+    (if (= s "")
       (Success {})
       (reduce
         &(fn [a x]
@@ -133,11 +133,11 @@ It can fail if the querystring is malformed, and will then return an `Error`.")
             (Error err) (Error err)
             (Success m)
               (let [splt (split-by x &[\=])]
-                (if (= (length &splt) 2)
+                (if (= (Array.length &splt) 2)
                   (Success (Map.put m &(unsafe-first &splt) (unsafe-nth &splt 1)))
                   (Error (fmt "Query parameter %s malformed." x))))))
         (Success {})
-        &(split-by &s &[\&]))))
+        &(split-by s &[\&]))))
 
   (doc query-map "parses the querystring as a `Map` and returns it.
 
@@ -145,7 +145,7 @@ It can fail if the querystring is malformed, and will then return an `Error`.")
   (defn query-map [u]
     (match @(query u)
       (Nothing) (Success {})
-      (Just s) (query-map-from-str s)))
+      (Just s) (query-map-from-str &s)))
 
   (doc str "prints the URL `u` as idempotently as possible, i.e. as the parsed
 string.
@@ -265,7 +265,7 @@ desirable—and can be fairly slow.")
 ])
 
 (defmodule URIParser
-  (use-all Array Char Int Maybe Result URI)
+  (use-all Char URI)
 
   (defn from-string [s] (init @s 0))
 
