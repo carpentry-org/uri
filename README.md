@@ -5,7 +5,7 @@ A `URI` datatype and parser for Carp.
 ## Installation
 
 ```clojure
-(load "git@github.com:carpentry-org/uri@0.0.7")
+(load "git@github.com:carpentry-org/uri@0.0.8")
 ```
 
 ## Usage

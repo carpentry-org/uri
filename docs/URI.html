@@ -31,7 +31,7 @@
             <div class="module-description">
                 <p>is a simple <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code>(load &quot;git@github.com:carpentry-org/uri@0.0.7&quot;)
+<pre><code>(load &quot;git@github.com:carpentry-org/uri@0.0.8&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -459,6 +459,27 @@ IPv6 addresses.</p>
                 </p>
                 <pre class="args">
                     (query-map u)
+                </pre>
+                <p class="doc">
+                    <p>parses the querystring as a <code>Map</code> and returns it.</p>
+<p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
+
+                </p>
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#query-map-from-str">
+                    <h3 id="query-map-from-str">
+                        query-map-from-str
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [String] (Result (Map String String) String))
+                </p>
+                <pre class="args">
+                    (query-map-from-str s)
                 </pre>
                 <p class="doc">
                     <p>parses the querystring as a <code>Map</code> and returns it.</p>
