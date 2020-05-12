@@ -270,6 +270,7 @@ desirable—and can be fairly slow.")
   (use-all Char URI)
 
   (defn from-string [s] (init @s 0))
+  (implements from-string URIParser.from-string)
 
   (defn c [p] (char-at (source p) @(offset p)))
   (defn nxt [p] (char-at (source p) (inc @(offset p))))
@@ -366,8 +367,7 @@ desirable—and can be fairly slow.")
           (end-of-host? &p)
             (do
               (set! res (parse-path (adv &p)
-                (map res &(fn [res] (set-port res (Just
-                              (from-string &(from pref st))))))))
+                (map res &(fn [res] (set-port res (Int.from-string &(from pref st)))))))
               (break))
           (do
             (set! res (Error
@@ -485,7 +485,7 @@ desirable—and can be fairly slow.")
 ## Installation
 
 ```
-(load \"git@github.com:carpentry-org/uri@0.0.8\")
+(load \"git@github.com:carpentry-org/uri@0.0.9\")
 ```
 
 ## Usage
