@@ -31,7 +31,7 @@
             <div class="module-description">
                 <p>is a simple <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code>(load &quot;git@github.com:carpentry-org/uri@0.0.8&quot;)
+<pre><code>(load &quot;git@github.com:carpentry-org/uri@0.0.9&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -62,7 +62,7 @@ inspired the escaping and unescaping mechanisms.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), b] Bool)
+                    (Fn [(Ref URI a), b] Bool)
                 </p>
                 <pre class="args">
                     (= u1 u2)
@@ -85,7 +85,7 @@ desirable—and can be fairly slow.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] Bool)
+                    (Fn [(Ref URI a)] Bool)
                 </p>
                 <pre class="args">
                     (absolute? u)
@@ -105,7 +105,7 @@ desirable—and can be fairly slow.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] URI)
+                    (Fn [(Ref URI a)] URI)
                 </p>
                 <span>
                     
@@ -125,7 +125,7 @@ desirable—and can be fairly slow.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Maybe String)] Int)
+                    (Fn [(Maybe String)] Int)
                 </p>
                 <pre class="args">
                     (default-port s)
@@ -146,7 +146,7 @@ Returns 0 if it’s unknown.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] Bool)
+                    (Fn [(Ref URI a)] Bool)
                 </p>
                 <pre class="args">
                     (default-port? u)
@@ -188,7 +188,7 @@ we know of—and their port values.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref String a)] String)
+                    (Fn [(Ref String a)] String)
                 </p>
                 <pre class="args">
                     (escape s)
@@ -208,7 +208,7 @@ we know of—and their port values.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -228,7 +228,7 @@ we know of—and their port values.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] String)
+                    (Fn [(Ref URI a)] String)
                 </p>
                 <pre class="args">
                     (full-path u)
@@ -251,7 +251,7 @@ we know of—and their port values.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -271,7 +271,7 @@ we know of—and their port values.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Maybe String))
+                    (Fn [(Ref URI a)] (Maybe String))
                 </p>
                 <pre class="args">
                     (hostname u)
@@ -295,7 +295,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Maybe String), (Maybe String), (Maybe Int), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String)] URI)
+                    (Fn [(Maybe String), (Maybe String), (Maybe Int), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -315,7 +315,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -335,7 +335,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref String a)] (Result URI String))
+                    (Fn [(Ref String a)] (Result URI String))
                 </p>
                 <pre class="args">
                     (parse s)
@@ -355,7 +355,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -375,7 +375,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -395,7 +395,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe Int) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe Int) a))
                 </p>
                 <span>
                     
@@ -415,7 +415,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] String)
+                    (Fn [(Ref URI a)] String)
                 </p>
                 <span>
                     
@@ -435,7 +435,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -455,7 +455,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Result (Map String String) String))
+                    (Fn [(Ref URI a)] (Result (Map String String) String))
                 </p>
                 <pre class="args">
                     (query-map u)
@@ -476,7 +476,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [String] (Result (Map String String) String))
+                    (Fn [(Ref String a)] (Result (Map String String) String))
                 </p>
                 <pre class="args">
                     (query-map-from-str s)
@@ -497,7 +497,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] Bool)
+                    (Fn [(Ref URI a)] Bool)
                 </p>
                 <pre class="args">
                     (relative? u)
@@ -517,7 +517,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -537,7 +537,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -557,7 +557,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -577,7 +577,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -597,7 +597,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -617,7 +617,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -637,7 +637,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -657,7 +657,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -677,7 +677,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -697,7 +697,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -717,7 +717,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -737,7 +737,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe Int)] URI)
+                    (Fn [URI, (Maybe Int)] URI)
                 </p>
                 <span>
                     
@@ -757,7 +757,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe Int)] ())
+                    (Fn [(Ref URI a), (Maybe Int)] ())
                 </p>
                 <span>
                     
@@ -777,7 +777,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -797,7 +797,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -817,7 +817,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -837,7 +837,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -857,7 +857,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Maybe String)] URI)
+                    (Fn [URI, (Maybe String)] URI)
                 </p>
                 <span>
                     
@@ -877,7 +877,7 @@ IPv6 addresses.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a), (Maybe String)] ())
+                    (Fn [(Ref URI a), (Maybe String)] ())
                 </p>
                 <span>
                     
@@ -897,7 +897,7 @@ IPv6 addresses.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] String)
+                    (Fn [(Ref URI a)] String)
                 </p>
                 <pre class="args">
                     (str u)
@@ -921,7 +921,7 @@ string.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref String a)] String)
+                    (Fn [(Ref String a)] String)
                 </p>
                 <pre class="args">
                     (unescape s)
@@ -940,7 +940,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -960,7 +960,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -980,7 +980,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1000,7 +1000,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1020,7 +1020,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1040,7 +1040,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe Int)] (Maybe Int) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe Int)] (Maybe Int) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1060,7 +1060,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1080,7 +1080,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1100,7 +1100,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [URI, (Ref (λ [(Maybe String)] (Maybe String) a) b)] URI)
+                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
                 </p>
                 <span>
                     
@@ -1120,7 +1120,7 @@ string.</p>
                     instantiate
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] (Ref (Maybe String) a))
+                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
                 </p>
                 <span>
                     
@@ -1140,7 +1140,7 @@ string.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [(Ref URI a)] String)
+                    (Fn [(Ref URI a)] String)
                 </p>
                 <pre class="args">
                     (userinfo u)
@@ -1164,7 +1164,7 @@ contains the provided username and password.</p>
                     defn
                 </div>
                 <p class="sig">
-                    (λ [] URI)
+                    (Fn [] URI)
                 </p>
                 <pre class="args">
                     (zero)
