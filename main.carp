@@ -14,6 +14,7 @@
 
 (defmodule URI
   (doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
+  (implements zero zero)
   (defn zero []
     (URI.init (Nothing) (Nothing) (Nothing) (Nothing) (Nothing) (Nothing)
               (Nothing) (Nothing) (Nothing)))
@@ -191,6 +192,7 @@ N.B.: We’re being cute by using string equality (which gets rid of differences
 between explicit/implicit port assignments). That might not always be
 desirable—and can be fairly slow.")
   (sig = (Fn [(Ref URI) (Ref URI)] Bool))
+  (implements = =)
   (defn = [u1 u2] (= (str (the (Ref URI) u1)) (str u2)))
 
   ; the escape mechanisms are inspired by janet’s uri library, written by
