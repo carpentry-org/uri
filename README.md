@@ -1,11 +1,11 @@
 # uri
 
-A `URI` datatype and parser for Carp.
+is a `URI` datatype and parser for Carp.
 
 ## Installation
 
 ```clojure
-(load "git@github.com:carpentry-org/uri@0.0.9")
+(load "git@github.com:carpentry-org/uri@0.0.10")
 ```
 
 ## Usage
@@ -14,7 +14,7 @@ To get started, you’ll most probably want to parse a `URI` from a string. To d
 so, you use `URI.parse`. This function will return a `URI` datatype for you to
 work with, or an error type if the URI string was invalid.
 
-If you havea a URI value the simplest operation is probably converting the URI
+If you have a a URI value the simplest operation is probably converting the URI
 back to a string using the `str` interface, which should be idempotent—i.e.
 you’ll get the original URI back.
 
