@@ -135,7 +135,7 @@ It can fail if the querystring is malformed, and will then return an `Error`.")
             (Success m)
               (let [splt (split-by x &[\=])]
                 (if (= (Array.length &splt) 2)
-                  (Success (Map.put m &(unsafe-first &splt) (unsafe-nth &splt 1)))
+                  (Success (Map.put m (unsafe-first &splt) (unsafe-nth &splt 1)))
                   (Error (fmt "Query parameter %s malformed." x))))))
         (Success {})
         &(split-by s &[\&]))))
