@@ -25,1154 +25,1155 @@
                     </ul>
                 </div>
             </div>
-            <h1>
-                URI
-            </h1>
-            <div class="module-description">
-                <p>is a simple <code>URI</code> datatype and parser for Carp.</p>
-<h2>Installation</h2>
-<pre><code>(load &quot;git@github.com:carpentry-org/uri@0.0.9&quot;)
-</code></pre>
-<h2>Usage</h2>
-<p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
-so, you use <code>URI.parse</code>. This function will return a <code>URI</code> datatype for you to
-work with, or an error type if the URI string was invalid.</p>
-<p>If you havea a URI value the simplest operation is probably converting the URI
-back to a string using the <code>str</code> interface, which should be idempotent—i.e.
-you’ll get the original URI back.</p>
-<p>You can also ask the <code>URI</code> for its properties, like the scheme, the port, or
-the URI parameters.</p>
-<h2>Acknowledgements</h2>
-<p>This datatype and parser was heavily inspired by the one in <a href="https://github.com/crystal-lang/crystal/blob/master/src/uri.cr">the Crystal
-standard
-library</a>.
-I cannot thank the people who worked on it enough; they saved me from going
-through a lot of pain and suffering!</p>
-<p>Similarly, <a href="https://github.com/andrewchambers/janet-uri/">Janet’s URI library</a>
-inspired the escaping and unescaping mechanisms.</p>
-
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#=">
-                    <h3 id="=">
-                        =
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+            <div class="module">
+                <h1>
+                    URI
+                </h1>
+                <div class="module-description">
+                    
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Ref URI b)] Bool)
-                </p>
-                <pre class="args">
-                    (= u1 u2)
-                </pre>
-                <p class="doc">
-                    <p>is defined as the equality of all members of URIs <code>u1</code> and <code>u2</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#=">
+                        <h3 id="=">
+                            =
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Ref URI b)] Bool)
+                    </p>
+                    <pre class="args">
+                        (= u1 u2)
+                    </pre>
+                    <p class="doc">
+                        <p>is defined as the equality of all members of URIs <code>u1</code> and <code>u2</code>.</p>
 <p>N.B.: We’re being cute by using string equality (which gets rid of differences
 between explicit/implicit port assignments). That might not always be
 desirable—and can be fairly slow.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#absolute?">
-                    <h3 id="absolute?">
-                        absolute?
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] Bool)
-                </p>
-                <pre class="args">
-                    (absolute? u)
-                </pre>
-                <p class="doc">
-                    <p>checks whether a URI <code>u</code> is absolute.</p>
+                <div class="binder">
+                    <a class="anchor" href="#absolute?">
+                        <h3 id="absolute?">
+                            absolute?
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] Bool)
+                    </p>
+                    <pre class="args">
+                        (absolute? u)
+                    </pre>
+                    <p class="doc">
+                        <p>checks whether a URI <code>u</code> is absolute.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#copy">
-                    <h3 id="copy">
-                        copy
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>copies a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#copy">
+                        <h3 id="copy">
+                            copy
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>copies a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#default-port">
-                    <h3 id="default-port">
-                        default-port
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Maybe String)] Int)
-                </p>
-                <pre class="args">
-                    (default-port s)
-                </pre>
-                <p class="doc">
-                    <p>gets the default <code>port</code> for the <code>scheme</code> of the URI <code>u</code>.
+                <div class="binder">
+                    <a class="anchor" href="#default-port">
+                        <h3 id="default-port">
+                            default-port
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Maybe String)] Int)
+                    </p>
+                    <pre class="args">
+                        (default-port s)
+                    </pre>
+                    <p class="doc">
+                        <p>gets the default <code>port</code> for the <code>scheme</code> of the URI <code>u</code>.
 Returns 0 if it’s unknown.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#default-port?">
-                    <h3 id="default-port?">
-                        default-port?
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] Bool)
-                </p>
-                <pre class="args">
-                    (default-port? u)
-                </pre>
-                <p class="doc">
-                    <p>checks whether the <code>port</code> of the URI <code>u</code> is the default
+                <div class="binder">
+                    <a class="anchor" href="#default-port?">
+                        <h3 id="default-port?">
+                            default-port?
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] Bool)
+                    </p>
+                    <pre class="args">
+                        (default-port? u)
+                    </pre>
+                    <p class="doc">
+                        <p>checks whether the <code>port</code> of the URI <code>u</code> is the default
 port for its <code>scheme</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#default-ports">
-                    <h3 id="default-ports">
-                        default-ports
-                    </h3>
-                </a>
-                <div class="description">
-                    def
+                    </p>
                 </div>
-                <p class="sig">
-                    (Map String Int)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>is a map of all the services that have default ports—that
+                <div class="binder">
+                    <a class="anchor" href="#default-ports">
+                        <h3 id="default-ports">
+                            default-ports
+                        </h3>
+                    </a>
+                    <div class="description">
+                        def
+                    </div>
+                    <p class="sig">
+                        (Map String Int)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>is a map of all the services that have default ports—that
 we know of—and their port values.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#escape">
-                    <h3 id="escape">
-                        escape
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref String a)] String)
-                </p>
-                <pre class="args">
-                    (escape s)
-                </pre>
-                <p class="doc">
-                    <p>URI unescapes the string <code>s</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#delete">
+                        <h3 id="delete">
+                            delete
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>deletes a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#fragment">
-                    <h3 id="fragment">
-                        fragment
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>fragment</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#escape">
+                        <h3 id="escape">
+                            escape
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref String a)] String)
+                    </p>
+                    <pre class="args">
+                        (escape s)
+                    </pre>
+                    <p class="doc">
+                        <p>URI unescapes the string <code>s</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#full-path">
-                    <h3 id="full-path">
-                        full-path
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] String)
-                </p>
-                <pre class="args">
-                    (full-path u)
-                </pre>
-                <p class="doc">
-                    <p>returns the full path of a URI <code>u</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#fragment">
+                        <h3 id="fragment">
+                            fragment
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>fragment</code> property of a <code>URI</code>.</p>
+
+                    </p>
+                </div>
+                <div class="binder">
+                    <a class="anchor" href="#full-path">
+                        <h3 id="full-path">
+                            full-path
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] String)
+                    </p>
+                    <pre class="args">
+                        (full-path u)
+                    </pre>
+                    <p class="doc">
+                        <p>returns the full path of a URI <code>u</code>.</p>
 <pre><code>(def uri (URI.parse &quot;http://foo.com/posts?id=30&amp;limit=5#time=1305298413&quot;))
 (URI.full-path &amp;uri) ; =&gt; /posts?id=30&amp;limit=5
 </code></pre>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#host">
-                    <h3 id="host">
-                        host
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>host</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#host">
+                        <h3 id="host">
+                            host
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>host</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#hostname">
-                    <h3 id="hostname">
-                        hostname
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Maybe String))
-                </p>
-                <pre class="args">
-                    (hostname u)
-                </pre>
-                <p class="doc">
-                    <p>returns the host part of a URI <code>u</code>, unwrapping brackets for
+                <div class="binder">
+                    <a class="anchor" href="#hostname">
+                        <h3 id="hostname">
+                            hostname
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Maybe String))
+                    </p>
+                    <pre class="args">
+                        (hostname u)
+                    </pre>
+                    <p class="doc">
+                        <p>returns the host part of a URI <code>u</code>, unwrapping brackets for
 IPv6 addresses.</p>
 <pre><code>(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;)) ; =&gt; ::1
 (URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;)) ; =&gt; [::1]
 </code></pre>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#init">
-                    <h3 id="init">
-                        init
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Maybe String), (Maybe String), (Maybe Int), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>creates a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#init">
+                        <h3 id="init">
+                            init
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Maybe String), (Maybe String), (Maybe Int), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String), (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>creates a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#opaque">
-                    <h3 id="opaque">
-                        opaque
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>opaque</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#opaque">
+                        <h3 id="opaque">
+                            opaque
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>opaque</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#parse">
-                    <h3 id="parse">
-                        parse
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref String a)] (Result URI String))
-                </p>
-                <pre class="args">
-                    (parse s)
-                </pre>
-                <p class="doc">
-                    <p>Parses a URI from a string <code>s</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#parse">
+                        <h3 id="parse">
+                            parse
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref String a)] (Result URI String))
+                    </p>
+                    <pre class="args">
+                        (parse s)
+                    </pre>
+                    <p class="doc">
+                        <p>Parses a URI from a string <code>s</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#password">
-                    <h3 id="password">
-                        password
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>password</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#password">
+                        <h3 id="password">
+                            password
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>password</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#path">
-                    <h3 id="path">
-                        path
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>path</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#path">
+                        <h3 id="path">
+                            path
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>path</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#port">
-                    <h3 id="port">
-                        port
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe Int) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>port</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#port">
+                        <h3 id="port">
+                            port
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe Int) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>port</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#prn">
-                    <h3 id="prn">
-                        prn
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] String)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>converts a <code>URI</code> to a string.</p>
+                <div class="binder">
+                    <a class="anchor" href="#prn">
+                        <h3 id="prn">
+                            prn
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] String)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>converts a <code>URI</code> to a string.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#query">
-                    <h3 id="query">
-                        query
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>query</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#query">
+                        <h3 id="query">
+                            query
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>query</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#query-map">
-                    <h3 id="query-map">
-                        query-map
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Result (Map String String) String))
-                </p>
-                <pre class="args">
-                    (query-map u)
-                </pre>
-                <p class="doc">
-                    <p>parses the querystring as a <code>Map</code> and returns it.</p>
+                <div class="binder">
+                    <a class="anchor" href="#query-map">
+                        <h3 id="query-map">
+                            query-map
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Result (Map String String) String))
+                    </p>
+                    <pre class="args">
+                        (query-map u)
+                    </pre>
+                    <p class="doc">
+                        <p>parses the querystring as a <code>Map</code> and returns it.</p>
 <p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#query-map-from-str">
-                    <h3 id="query-map-from-str">
-                        query-map-from-str
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref String a)] (Result (Map String String) String))
-                </p>
-                <pre class="args">
-                    (query-map-from-str s)
-                </pre>
-                <p class="doc">
-                    <p>parses the querystring as a <code>Map</code> and returns it.</p>
+                <div class="binder">
+                    <a class="anchor" href="#query-map-from-str">
+                        <h3 id="query-map-from-str">
+                            query-map-from-str
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref String a)] (Result (Map String String) String))
+                    </p>
+                    <pre class="args">
+                        (query-map-from-str s)
+                    </pre>
+                    <p class="doc">
+                        <p>parses the querystring as a <code>Map</code> and returns it.</p>
 <p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#relative?">
-                    <h3 id="relative?">
-                        relative?
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] Bool)
-                </p>
-                <pre class="args">
-                    (relative? u)
-                </pre>
-                <p class="doc">
-                    <p>checks whether a URI <code>u</code> is relative.</p>
+                <div class="binder">
+                    <a class="anchor" href="#relative?">
+                        <h3 id="relative?">
+                            relative?
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] Bool)
+                    </p>
+                    <pre class="args">
+                        (relative? u)
+                    </pre>
+                    <p class="doc">
+                        <p>checks whether a URI <code>u</code> is relative.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#scheme">
-                    <h3 id="scheme">
-                        scheme
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>scheme</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#scheme">
+                        <h3 id="scheme">
+                            scheme
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>scheme</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-fragment">
-                    <h3 id="set-fragment">
-                        set-fragment
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>fragment</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-fragment">
+                        <h3 id="set-fragment">
+                            set-fragment
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>fragment</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-fragment!">
-                    <h3 id="set-fragment!">
-                        set-fragment!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>fragment</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-fragment!">
+                        <h3 id="set-fragment!">
+                            set-fragment!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>fragment</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-host">
-                    <h3 id="set-host">
-                        set-host
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>host</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-host">
+                        <h3 id="set-host">
+                            set-host
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>host</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-host!">
-                    <h3 id="set-host!">
-                        set-host!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>host</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-host!">
+                        <h3 id="set-host!">
+                            set-host!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>host</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-opaque">
-                    <h3 id="set-opaque">
-                        set-opaque
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>opaque</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-opaque">
+                        <h3 id="set-opaque">
+                            set-opaque
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>opaque</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-opaque!">
-                    <h3 id="set-opaque!">
-                        set-opaque!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>opaque</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-opaque!">
+                        <h3 id="set-opaque!">
+                            set-opaque!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>opaque</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-password">
-                    <h3 id="set-password">
-                        set-password
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>password</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-password">
+                        <h3 id="set-password">
+                            set-password
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>password</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-password!">
-                    <h3 id="set-password!">
-                        set-password!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>password</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-password!">
+                        <h3 id="set-password!">
+                            set-password!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>password</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-path">
-                    <h3 id="set-path">
-                        set-path
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>path</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-path">
+                        <h3 id="set-path">
+                            set-path
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>path</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-path!">
-                    <h3 id="set-path!">
-                        set-path!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>path</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-path!">
+                        <h3 id="set-path!">
+                            set-path!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>path</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-port">
-                    <h3 id="set-port">
-                        set-port
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe Int)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>port</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-port">
+                        <h3 id="set-port">
+                            set-port
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe Int)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>port</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-port!">
-                    <h3 id="set-port!">
-                        set-port!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe Int)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>port</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-port!">
+                        <h3 id="set-port!">
+                            set-port!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe Int)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>port</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-query">
-                    <h3 id="set-query">
-                        set-query
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>query</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-query">
+                        <h3 id="set-query">
+                            set-query
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>query</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-query!">
-                    <h3 id="set-query!">
-                        set-query!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>query</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-query!">
+                        <h3 id="set-query!">
+                            set-query!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>query</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-scheme">
-                    <h3 id="set-scheme">
-                        set-scheme
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>scheme</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-scheme">
+                        <h3 id="set-scheme">
+                            set-scheme
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>scheme</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-scheme!">
-                    <h3 id="set-scheme!">
-                        set-scheme!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>scheme</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-scheme!">
+                        <h3 id="set-scheme!">
+                            set-scheme!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>scheme</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-user">
-                    <h3 id="set-user">
-                        set-user
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Maybe String)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>user</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-user">
+                        <h3 id="set-user">
+                            set-user
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Maybe String)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>user</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#set-user!">
-                    <h3 id="set-user!">
-                        set-user!
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a), (Maybe String)] ())
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>sets the <code>user</code> property of a <code>URI</code> in place.</p>
+                <div class="binder">
+                    <a class="anchor" href="#set-user!">
+                        <h3 id="set-user!">
+                            set-user!
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Maybe String)] ())
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>sets the <code>user</code> property of a <code>URI</code> in place.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#str">
-                    <h3 id="str">
-                        str
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] String)
-                </p>
-                <pre class="args">
-                    (str u)
-                </pre>
-                <p class="doc">
-                    <p>prints the URL <code>u</code> as idempotently as possible, i.e. as the parsed
+                <div class="binder">
+                    <a class="anchor" href="#str">
+                        <h3 id="str">
+                            str
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] String)
+                    </p>
+                    <pre class="args">
+                        (str u)
+                    </pre>
+                    <p class="doc">
+                        <p>prints the URL <code>u</code> as idempotently as possible, i.e. as the parsed
 string.</p>
 <pre><code>(def uri (URI.parse &quot;http://admin:password@foo.com&quot;))
 (URI.str &amp;uri) ; =&gt; &quot;http://admin:password@foo.com&quot;
 </code></pre>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#unescape">
-                    <h3 id="unescape">
-                        unescape
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref String a)] String)
-                </p>
-                <pre class="args">
-                    (unescape s)
-                </pre>
-                <p class="doc">
-                    
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-fragment">
-                    <h3 id="update-fragment">
-                        update-fragment
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                <div class="binder">
+                    <a class="anchor" href="#unescape">
+                        <h3 id="unescape">
+                            unescape
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref String a)] String)
+                    </p>
+                    <pre class="args">
+                        (unescape s)
+                    </pre>
+                    <p class="doc">
+                        
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>fragment</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-fragment">
+                        <h3 id="update-fragment">
+                            update-fragment
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>fragment</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-host">
-                    <h3 id="update-host">
-                        update-host
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>host</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-host">
+                        <h3 id="update-host">
+                            update-host
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>host</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-opaque">
-                    <h3 id="update-opaque">
-                        update-opaque
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>opaque</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-opaque">
+                        <h3 id="update-opaque">
+                            update-opaque
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>opaque</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-password">
-                    <h3 id="update-password">
-                        update-password
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>password</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-password">
+                        <h3 id="update-password">
+                            update-password
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>password</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-path">
-                    <h3 id="update-path">
-                        update-path
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>path</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-path">
+                        <h3 id="update-path">
+                            update-path
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>path</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-port">
-                    <h3 id="update-port">
-                        update-port
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe Int)] (Maybe Int) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>port</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-port">
+                        <h3 id="update-port">
+                            update-port
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe Int)] (Maybe Int) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>port</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-query">
-                    <h3 id="update-query">
-                        update-query
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>query</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-query">
+                        <h3 id="update-query">
+                            update-query
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>query</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-scheme">
-                    <h3 id="update-scheme">
-                        update-scheme
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>scheme</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-scheme">
+                        <h3 id="update-scheme">
+                            update-scheme
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>scheme</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#update-user">
-                    <h3 id="update-user">
-                        update-user
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>updates the <code>user</code> property of a <code>URI</code> using a function <code>f</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#update-user">
+                        <h3 id="update-user">
+                            update-user
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [URI, (Ref (Fn [(Maybe String)] (Maybe String) a) b)] URI)
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>updates the <code>user</code> property of a <code>URI</code> using a function <code>f</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#user">
-                    <h3 id="user">
-                        user
-                    </h3>
-                </a>
-                <div class="description">
-                    instantiate
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] (Ref (Maybe String) a))
-                </p>
-                <span>
-                    
-                </span>
-                <p class="doc">
-                    <p>gets the <code>user</code> property of a <code>URI</code>.</p>
+                <div class="binder">
+                    <a class="anchor" href="#user">
+                        <h3 id="user">
+                            user
+                        </h3>
+                    </a>
+                    <div class="description">
+                        instantiate
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Ref (Maybe String) a))
+                    </p>
+                    <span>
+                        
+                    </span>
+                    <p class="doc">
+                        <p>gets the <code>user</code> property of a <code>URI</code>.</p>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#userinfo">
-                    <h3 id="userinfo">
-                        userinfo
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [(Ref URI a)] String)
-                </p>
-                <pre class="args">
-                    (userinfo u)
-                </pre>
-                <p class="doc">
-                    <p>returns the user-information component for a URI <code>u</code>, which
+                <div class="binder">
+                    <a class="anchor" href="#userinfo">
+                        <h3 id="userinfo">
+                            userinfo
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] String)
+                    </p>
+                    <pre class="args">
+                        (userinfo u)
+                    </pre>
+                    <p class="doc">
+                        <p>returns the user-information component for a URI <code>u</code>, which
 contains the provided username and password.</p>
 <pre><code>(def uri (URI.parse &quot;http://admin:password@foo.com&quot;))
 (URI.userinfo &amp;uri) ; =&gt; admin:password
 </code></pre>
 
-                </p>
-            </div>
-            <div class="binder">
-                <a class="anchor" href="#zero">
-                    <h3 id="zero">
-                        zero
-                    </h3>
-                </a>
-                <div class="description">
-                    defn
+                    </p>
                 </div>
-                <p class="sig">
-                    (Fn [] URI)
-                </p>
-                <pre class="args">
-                    (zero)
-                </pre>
-                <p class="doc">
-                    <p>Creates an empty URI, i.e. one that has only <code>Nothing</code> in it.</p>
+                <div class="binder">
+                    <a class="anchor" href="#zero">
+                        <h3 id="zero">
+                            zero
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [] URI)
+                    </p>
+                    <pre class="args">
+                        (zero)
+                    </pre>
+                    <p class="doc">
+                        <p>Creates an empty URI, i.e. one that has only <code>Nothing</code> in it.</p>
 
-                </p>
+                    </p>
+                </div>
             </div>
         </div>
     </body>

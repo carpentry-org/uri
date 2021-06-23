@@ -12,35 +12,6 @@
 
 (use-all Array Int Maybe Result)
 
-(doc URI "is a `URI` datatype and parser for Carp.
-
-## Installation
-
-```clojure
-(load \"git@github.com:carpentry-org/uri@0.0.10\")
-```
-
-## Usage
-
-To get started, you’ll most probably want to parse a `URI` from a string. To do
-so, you use `URI.parse`. This function will return a `URI` datatype for you to
-work with, or an error type if the URI string was invalid.
-
-If you have a a URI value the simplest operation is probably converting the URI
-back to a string using the `str` interface, which should be idempotent—i.e.
-you’ll get the original URI back.
-
-You can also ask the `URI` for its properties, like the scheme, the port, or the
-URI parameters.
-
-A more complete documentation can be found under [https://veitheller.de/uri/](https://veitheller.de/uri)!
-
-## Acknowledgements
-
-This datatype and parser was heavily inspired by the one in [the Crystal
-standard library](https://github.com/crystal-lang/crystal/blob/master/src/uri.cr).
-I cannot thank the people who worked on it enough; they saved me from going
-through a lot of pain and suffering!")
 (defmodule URI
   (doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
   (implements zero zero)
@@ -509,37 +480,6 @@ desirable—and can be fairly slow.")
         (parse-no-scheme p res))))
 )
 
-(doc URI "is a simple `URI` datatype and parser for Carp.
-
-## Installation
-
-```
-(load \"git@github.com:carpentry-org/uri@0.0.9\")
-```
-
-## Usage
-
-To get started, you’ll most probably want to parse a `URI` from a string. To do
-so, you use `URI.parse`. This function will return a `URI` datatype for you to
-work with, or an error type if the URI string was invalid.
-
-If you havea a URI value the simplest operation is probably converting the URI
-back to a string using the `str` interface, which should be idempotent—i.e.
-you’ll get the original URI back.
-
-You can also ask the `URI` for its properties, like the scheme, the port, or
-the URI parameters.
-
-## Acknowledgements
-
-This datatype and parser was heavily inspired by the one in [the Crystal
-standard
-library](https://github.com/crystal-lang/crystal/blob/master/src/uri.cr).
-I cannot thank the people who worked on it enough; they saved me from going
-through a lot of pain and suffering!
-
-Similarly, [Janet’s URI library](https://github.com/andrewchambers/janet-uri/)
-inspired the escaping and unescaping mechanisms.")
 (defmodule URI
   (doc parse "Parses a URI from a string `s`.")
   (defn parse [s]
@@ -550,3 +490,32 @@ inspired the escaping and unescaping mechanisms.")
   (defn = [u1 u2]
     (URI.= &u1 &u2))
 )
+(doc URI "is a `URI` datatype and parser for Carp.
+
+## Installation
+
+```clojure
+(load \"git@github.com:carpentry-org/uri@0.0.11\")
+```
+
+## Usage
+
+To get started, you’ll most probably want to parse a `URI` from a string. To do
+so, you use `URI.parse`. This function will return a `URI` datatype for you to
+work with, or an error type if the URI string was invalid.
+
+If you have a a URI value the simplest operation is probably converting the URI
+back to a string using the `str` interface, which should be idempotent—i.e.
+you’ll get the original URI back.
+
+You can also ask the `URI` for its properties, like the scheme, the port, or the
+URI parameters.
+
+A more complete documentation can be found under [https://veitheller.de/uri/](https://veitheller.de/uri)!
+
+## Acknowledgements
+
+This datatype and parser was heavily inspired by the one in [the Crystal
+standard library](https://github.com/crystal-lang/crystal/blob/master/src/uri.cr).
+I cannot thank the people who worked on it enough; they saved me from going
+through a lot of pain and suffering!")
