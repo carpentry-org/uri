@@ -306,7 +306,7 @@ desirable—and can be fairly slow.")
   (defn alpha? [p] (Char.alpha? (c p)))
   (defn num? [p] (Char.num? (c p)))
   (defn end? [p] (= (length (source p)) @(offset p)))
-  (defn end-of-host? [p] (or* (= (c p) \/) (= (c p) \?) (= (c p) \#)))
+  (defn end-of-host? [p] (or (= (c p) \/) (= (c p) \?) (= (c p) \#)))
   (defn adv [p] (update-offset @p &inc))
   (defn bck [p] (update-offset @p &dec))
   (defn from [p frm] (slice (source p) frm @(offset p)))
@@ -482,7 +482,7 @@ desirable—and can be fairly slow.")
              pref &p]
       (while true
         (cond
-          (or* (alpha? &p) (num? &p) (= (c &p) \-) (= (c &p) \.) (= (c &p) \+))
+          (or (alpha? &p) (num? &p) (= (c &p) \-) (= (c &p) \.) (= (c &p) \+))
             (set! p (adv &p))
           (= (c &p) \:)
             (do
