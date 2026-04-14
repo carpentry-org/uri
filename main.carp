@@ -362,6 +362,10 @@ desirable—and can be fairly slow.")
              pref &p]
       (while true
         (cond
+          (end? &p)
+            (do
+              (set! res (map res &(fn [res] (set-port res (Int.from-string &(from pref st))))))
+              (break))
           (num? &p)
             (set! p (adv &p))
           (end-of-host? &p)
@@ -383,6 +387,10 @@ desirable—and can be fairly slow.")
                pref &p]
         (while true
           (cond
+            (end? &p)
+              (do
+                (set! res (map res &(fn [res] (set-host res (Just (from pref st))))))
+                (break))
             (and (= (c &p) \:) (not bracket-flag))
               (do
                 (set! res (parse-port (adv &p)
@@ -427,6 +435,10 @@ desirable—and can be fairly slow.")
              st @(offset &p)]
       (while true
         (cond
+          (end? &p)
+            (do
+              (set! res (parse-host (set-offset @&p st) res))
+              (break))
           (= (c &p) \@)
             (do
               (set! res (parse-userinfo (set-offset @&p st) res))
