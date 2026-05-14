@@ -11,83 +11,63 @@
     (IO.println "## Parsing")
     (with-test test
       (assert-equal test
-                    &(Just @"scheme")
-                    (scheme &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the scheme correctly"
-      )
+        &(Just @"scheme")
+        (scheme &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the scheme correctly")
       (assert-equal test
-                    &(Just @"usr")
-                    (user &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the user correctly"
-      )
+        &(Just @"usr")
+        (user &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the user correctly")
       (assert-equal test
-                    &(Just @"pass")
-                    (password &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the password correctly"
-      )
+        &(Just @"pass")
+        (password &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the password correctly")
       (assert-equal test
-                    &(Just @"domain.tld")
-                    (host &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the password correctly"
-      )
+        &(Just @"domain.tld")
+        (host &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the password correctly")
       (assert-equal test
-                    &(Just 123)
-                    (port &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the port correctly"
-      )
+        &(Just 123)
+        (port &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the port correctly")
       (assert-equal test
-                    &(Just @"path")
-                    (path &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the path correctly"
-      )
+        &(Just @"path")
+        (path &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the path correctly")
       (assert-equal test
-                    &(Just @"query=1")
-                    (query &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the query correctly"
-      )
+        &(Just @"query=1")
+        (query &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the query correctly")
       (assert-equal test
-                    &{@"query" @"1"}
-                    &(unsafe-from-success (query-map &(unsafe-from-success (URI.parse uri))))
-                    "we can parse and get the query correctly as a map"
-      )
+        &{@"query" @"1"}
+        &(unsafe-from-success (query-map &(unsafe-from-success (URI.parse uri))))
+        "we can parse and get the query correctly as a map")
       (assert-equal test
-                    &{@"key-one" @"val-one"
-                      @"key2"    @"val2"}
-                    &(unsafe-from-success (query-map-from-str "key-one=val-one&key2=val2"))
-                    "we can parse and get the query correctly as a map from a string"
-      )
+        &{@"key-one" @"val-one" @"key2" @"val2"}
+        &(unsafe-from-success (query-map-from-str "key-one=val-one&key2=val2"))
+        "we can parse and get the query correctly as a map from a string")
       (assert-equal test
-                    &(Just @"fragment")
-                    (fragment &(unsafe-from-success (URI.parse uri)))
-                    "we can parse and get the fragment correctly"
-      )
+        &(Just @"fragment")
+        (fragment &(unsafe-from-success (URI.parse uri)))
+        "we can parse and get the fragment correctly")
       (assert-equal test
-                    &(Just @"")
-                    (path &(unsafe-from-success (URI.parse "/")))
-                    "we can parse relative URIs"
-      )
-    )))
+        &(Just @"")
+        (path &(unsafe-from-success (URI.parse "/")))
+        "we can parse relative URIs"))))
 
 (defn test-escaping []
   (do
     (IO.println "## Escaping")
     (with-test test
+      (assert-equal test "abcd%20efg" &(escape "abcd efg") "we can escape URIs")
       (assert-equal test
-                    "abcd%20efg"
-                    &(escape "abcd efg")
-                    "we can escape URIs"
-      )
+        "abcd efg"
+        &(unescape "abcd%20efg")
+        "we can unescape URIs")
       (assert-equal test
-                    "abcd efg"
-                    &(unescape "abcd%20efg")
-                    "we can unescape URIs"
-      )
-      (assert-equal test
-                    &(Error @"Invalid URI: bad port at character 20")
-                    &(URI.parse "https://domain.tld:1ab3/")
-                    "invalid ports lead to errors"
-      )
-    )))
+        &(Error @"Invalid URI: bad port at character 20")
+        &(URI.parse "https://domain.tld:1ab3/")
+        "invalid ports lead to errors"))))
 
 (defn test-stringification []
   (do
@@ -95,16 +75,9 @@
     (with-test test
       (let [s &(str &(unsafe-from-success (URI.parse uri)))]
         (assert-equal test
-                      uri
-                      s
-                      "we can convert our representation to a string again correctly"
-        )
-      )
-    )))
+          uri
+          s
+          "we can convert our representation to a string again correctly")))))
 
 (defn main []
-  (Array.sum &[
-    (test-parsing)
-    (test-escaping)
-    (test-stringification)
-  ]))
+  (Array.sum &[(test-parsing) (test-escaping) (test-stringification)]))
