@@ -246,7 +246,7 @@ desirable—and can be fairly slow.")
              cs (chars s)]
       (for [i 0 (Array.length &cs)]
         (let-do [c @(Array.unsafe-nth &cs i)]
-          (if (= \% c)
+          (if (and (= \% c) (< (+ i 2) (Array.length &cs)))
             (do
               (Array.aset! &a
                            n

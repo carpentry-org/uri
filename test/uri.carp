@@ -66,6 +66,14 @@
         &(unescape "abcd%20efg")
         "we can unescape URIs")
       (assert-equal test
+        "test%"
+        &(unescape "test%")
+        "unescape passes through truncated percent at end")
+      (assert-equal test
+        "test%2"
+        &(unescape "test%2")
+        "unescape passes through percent with only one hex digit at end")
+      (assert-equal test
         &(Error @"Invalid URI: bad port at character 20")
         &(URI.parse "https://domain.tld:1ab3/")
         "invalid ports lead to errors"))))
