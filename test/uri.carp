@@ -48,6 +48,12 @@
         &(unsafe-from-success (query-map-from-str "key-one=val-one&key2=val2"))
         "we can parse and get the query correctly as a map from a string")
       (assert-equal test
+        &{@"key one" @"val one"
+          @"key2" @"val2"}
+        &(unsafe-from-success
+          (query-map-from-str "key%20one=val%20one&key2=val2"))
+        "query-map-from-str percent-decodes keys and values")
+      (assert-equal test
         &(Just @"fragment")
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
@@ -78,6 +84,23 @@
         &(URI.parse "https://domain.tld:1ab3/")
         "invalid ports lead to errors"))))
 
+(defn test-query-string-from-map []
+  (do
+    (IO.println "## Query String From Map")
+    (with-test test
+      (assert-equal test
+        ""
+        &(query-string-from-map &{})
+        "empty map produces empty string")
+      (assert-equal test
+        "key=val"
+        &(query-string-from-map &{@"key" @"val"})
+        "single pair produces key=val")
+      (assert-equal test
+        "key%20one=val%20one"
+        &(query-string-from-map &{@"key one" @"val one"})
+        "query-string-from-map percent-encodes keys and values"))))
+
 (defn test-stringification []
   (do
     (IO.println "## Stringification")
@@ -89,4 +112,8 @@
           "we can convert our representation to a string again correctly")))))
 
 (defn main []
-  (Array.sum &[(test-parsing) (test-escaping) (test-stringification)]))
+  (Array.sum
+    &[(test-parsing)
+      (test-escaping)
+      (test-query-string-from-map)
+      (test-stringification)]))
