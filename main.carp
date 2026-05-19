@@ -127,30 +127,6 @@ contains the provided username and password.
         @(if (just? (password u)) ":" "")
         (from @(password u) @"")]))
 
-  (doc query-map-from-str "parses the querystring as a `Map` and returns it.
-
-It can fail if the querystring is malformed, and will then return an `Error`.")
-  (defn query-map-from-str [s]
-    (if (= s "")
-      (Success {})
-      (reduce
-        &(fn [a x]
-          (match a
-            (Error err) (Error err)
-            (Success m)
-              (let [splt (split-by x &[\=])]
-                (if (= (Array.length &splt) 2)
-                  (Success (Map.put m (unsafe-first &splt) (unsafe-nth &splt 1)))
-                  (Error (fmt "Query parameter %s malformed." x))))))
-        (Success {})
-        &(split-by s &[\&]))))
-
-  (doc query-map "parses the querystring as a `Map` and returns it.
-
-It can fail if the querystring is malformed, and will then return an `Error`.")
-  (defn query-map [u]
-    (match @(query u) (Nothing) (Success {}) (Just s) (query-map-from-str &s)))
-
   (doc str "prints the URL `u` as idempotently as possible, i.e. as the parsed
 string.
 
@@ -259,7 +235,47 @@ desirable—and can be fairly slow.")
               (set! i (+ i 2)))
             (Array.aset! &a n c))
           (set! n (inc n))))
-      (from-chars &a))))
+      (from-chars &a)))
+
+  (doc query-map-from-str "parses the querystring as a `Map` and returns it,
+percent-decoding keys and values.
+
+It can fail if the querystring is malformed, and will then return an `Error`.")
+  (defn query-map-from-str [s]
+    (if (= s "")
+      (Success {})
+      (reduce
+        &(fn [a x]
+          (match a
+            (Error err) (Error err)
+            (Success m)
+              (let [splt (split-by x &[\=])]
+                (if (= (Array.length &splt) 2)
+                  (let [k (unescape (unsafe-first &splt))
+                        v (unescape (unsafe-nth &splt 1))]
+                    (Success (Map.put m &k &v)))
+                  (Error (fmt "Query parameter %s malformed." x))))))
+        (Success {})
+        &(split-by s &[\&]))))
+
+  (doc query-map "parses the querystring as a `Map` and returns it,
+percent-decoding keys and values.
+
+It can fail if the querystring is malformed, and will then return an `Error`.")
+  (defn query-map [u]
+    (match @(query u) (Nothing) (Success {}) (Just s) (query-map-from-str &s)))
+
+  (doc query-string-from-map "converts a `Map` of query parameters back into a
+querystring, percent-encoding keys and values.
+
+This is the inverse of `query-map-from-str`.")
+  (defn query-string-from-map [m]
+    (Map.kv-reduce
+      &(fn [acc k v]
+        (let [pair (concat &[(escape k) @"=" (escape v)])]
+          (if (String.empty? &acc) pair (concat &[acc @"&" pair]))))
+      @""
+      m)))
 
 (deftype URIParser [source String
                     offset Int])
