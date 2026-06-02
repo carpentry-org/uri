@@ -30,7 +30,26 @@
                     URI
                 </h1>
                 <div class="module-description">
-                    
+                    <p>is a <code>URI</code> datatype and parser for Carp.</p>
+<h2>Installation</h2>
+<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.2.0&quot;)
+</code></pre>
+<h2>Usage</h2>
+<p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
+so, you use <code>URI.parse</code>. This function will return a <code>URI</code> datatype for you to
+work with, or an error type if the URI string was invalid.</p>
+<p>If you have a a URI value the simplest operation is probably converting the URI
+back to a string using the <code>str</code> interface, which should be idempotent—i.e.
+you’ll get the original URI back.</p>
+<p>You can also ask the <code>URI</code> for its properties, like the scheme, the port, or the
+URI parameters.</p>
+<p>A more complete documentation can be found under <a href="https://veitheller.de/uri">https://veitheller.de/uri/</a>!</p>
+<h2>Acknowledgements</h2>
+<p>This datatype and parser was heavily inspired by the one in <a href="https://github.com/crystal-lang/crystal/blob/master/src/uri.cr">the Crystal
+standard library</a>.
+I cannot thank the people who worked on it enough; they saved me from going
+through a lot of pain and suffering!</p>
+
                 </div>
                 <div class="binder">
                     <a class="anchor" href="#=">
@@ -174,7 +193,7 @@ we know of—and their port values.</p>
                         
                     </span>
                     <p class="doc">
-                        <p>deletes a <code>URI</code>.</p>
+                        <p>deletes a <code>URI</code>. Should usually not be called manually.</p>
 
                     </p>
                 </div>
@@ -461,7 +480,8 @@ IPv6 addresses.</p>
                         (query-map u)
                     </pre>
                     <p class="doc">
-                        <p>parses the querystring as a <code>Map</code> and returns it.</p>
+                        <p>parses the querystring as a <code>Map</code> and returns it,
+percent-decoding keys and values.</p>
 <p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
 
                     </p>
@@ -482,8 +502,31 @@ IPv6 addresses.</p>
                         (query-map-from-str s)
                     </pre>
                     <p class="doc">
-                        <p>parses the querystring as a <code>Map</code> and returns it.</p>
+                        <p>parses the querystring as a <code>Map</code> and returns it,
+percent-decoding keys and values.</p>
 <p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
+
+                    </p>
+                </div>
+                <div class="binder">
+                    <a class="anchor" href="#query-string-from-map">
+                        <h3 id="query-string-from-map">
+                            query-string-from-map
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref (Map String String) a)] String)
+                    </p>
+                    <pre class="args">
+                        (query-string-from-map m)
+                    </pre>
+                    <p class="doc">
+                        <p>converts a <code>Map</code> of query parameters back into a
+querystring, percent-encoding keys and values.</p>
+<p>This is the inverse of <code>query-map-from-str</code>.</p>
 
                     </p>
                 </div>
