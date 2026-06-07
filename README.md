@@ -21,6 +21,26 @@ you’ll get the original URI back.
 You can also ask the `URI` for its properties, like the scheme, the port, or the
 URI parameters.
 
+### Resolving relative references
+
+`URI.resolve` resolves a relative URI reference against a base URI, following
+[RFC 3986 section 5](https://www.rfc-editor.org/rfc/rfc3986#section-5):
+
+```clojure
+(def base (Result.unsafe-from-success (URI.parse "http://a/b/c/d;p?q")))
+(URI.resolve &base "../g")   ; => Success http://a/b/g
+(URI.resolve &base "/g")     ; => Success http://a/g
+(URI.resolve &base "?y")     ; => Success http://a/b/c/d;p?y
+(URI.resolve &base "//h/p")  ; => Success http://h/p
+```
+
+`URI.remove-dot-segments` is the underlying path normalizer (RFC 3986 section
+5.2.4). It resolves `.` and `..` segments in a path string:
+
+```clojure
+(URI.remove-dot-segments "/a/b/c/./../../g") ; => "/a/g"
+```
+
 A more complete documentation can be found under [https://veitheller.de/uri/](https://veitheller.de/uri)!
 
 ## Acknowledgements
