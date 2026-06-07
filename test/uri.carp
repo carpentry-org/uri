@@ -166,7 +166,41 @@
       (assert-equal test
         "http://a/g"
         &(resolved-str "../../../../g")
-        "resolve ../../../../g"))))
+        "resolve ../../../../g")
+      ; Abnormal examples (dots in non-segment positions)
+      (assert-equal test
+        "http://a/b/c/g."
+        &(resolved-str "g.")
+        "resolve g. (dot is part of segment)")
+      (assert-equal test
+        "http://a/b/c/.g"
+        &(resolved-str ".g")
+        "resolve .g (dot is part of segment)")
+      (assert-equal test
+        "http://a/b/c/g.."
+        &(resolved-str "g..")
+        "resolve g.. (dots are part of segment)")
+      (assert-equal test
+        "http://a/b/c/..g"
+        &(resolved-str "..g")
+        "resolve ..g (dots are part of segment)")
+      ; Abnormal examples (dots in query and fragment)
+      (assert-equal test
+        "http://a/b/c/g?y/./x"
+        &(resolved-str "g?y/./x")
+        "resolve g?y/./x (dots in query are literal)")
+      (assert-equal test
+        "http://a/b/c/g?y/../x"
+        &(resolved-str "g?y/../x")
+        "resolve g?y/../x (dots in query are literal)")
+      (assert-equal test
+        "http://a/b/c/g#s/./x"
+        &(resolved-str "g#s/./x")
+        "resolve g#s/./x (dots in fragment are literal)")
+      (assert-equal test
+        "http://a/b/c/g#s/../x"
+        &(resolved-str "g#s/../x")
+        "resolve g#s/../x (dots in fragment are literal)"))))
 
 (defn main []
   (Array.sum
