@@ -111,9 +111,67 @@
           s
           "we can convert our representation to a string again correctly")))))
 
+; RFC 3986 Section 5.4 test vectors
+(def base-uri "http://a/b/c/d;p?q")
+
+(defn resolved-str [ref-str]
+  (let [base (unsafe-from-success (URI.parse base-uri))]
+    (str &(unsafe-from-success (URI.resolve &base ref-str)))))
+
+(defn test-resolve []
+  (do
+    (IO.println "## Resolve (RFC 3986 Section 5.4)")
+    (with-test test
+      ; Normal examples
+      (assert-equal test "http://a/b/c/g" &(resolved-str "g") "resolve g")
+      (assert-equal test "http://a/b/c/g" &(resolved-str "./g") "resolve ./g")
+      (assert-equal test "http://a/b/c/g/" &(resolved-str "g/") "resolve g/")
+      (assert-equal test "http://a/g" &(resolved-str "/g") "resolve /g")
+      (assert-equal test "http://g/p" &(resolved-str "//g/p") "resolve //g/p")
+      (assert-equal test "http://a/b/c/d;p?y" &(resolved-str "?y") "resolve ?y")
+      (assert-equal test "http://a/b/c/g?y" &(resolved-str "g?y") "resolve g?y")
+      (assert-equal test
+        "http://a/b/c/d;p?q#s"
+        &(resolved-str "#s")
+        "resolve #s")
+      (assert-equal test "http://a/b/c/g#s" &(resolved-str "g#s") "resolve g#s")
+      (assert-equal test
+        "http://a/b/c/g?y#s"
+        &(resolved-str "g?y#s")
+        "resolve g?y#s")
+      (assert-equal test "http://a/b/c/;x" &(resolved-str ";x") "resolve ;x")
+      (assert-equal test "http://a/b/c/g;x" &(resolved-str "g;x") "resolve g;x")
+      (assert-equal test
+        "http://a/b/c/g;x?y#s"
+        &(resolved-str "g;x?y#s")
+        "resolve g;x?y#s")
+      (assert-equal test "http://a/b/c/d;p?q" &(resolved-str "") "resolve empty")
+      ; Dot segment examples
+      (assert-equal test "http://a/b/c/" &(resolved-str ".") "resolve .")
+      (assert-equal test "http://a/b/c/" &(resolved-str "./") "resolve ./")
+      (assert-equal test "http://a/b/" &(resolved-str "..") "resolve ..")
+      (assert-equal test "http://a/b/" &(resolved-str "../") "resolve ../")
+      (assert-equal test "http://a/b/g" &(resolved-str "../g") "resolve ../g")
+      (assert-equal test "http://a/" &(resolved-str "../..") "resolve ../..")
+      (assert-equal test "http://a/" &(resolved-str "../../") "resolve ../../")
+      (assert-equal test
+        "http://a/g"
+        &(resolved-str "../../g")
+        "resolve ../../g")
+      ; Abnormal examples (going above root)
+      (assert-equal test
+        "http://a/g"
+        &(resolved-str "../../../g")
+        "resolve ../../../g")
+      (assert-equal test
+        "http://a/g"
+        &(resolved-str "../../../../g")
+        "resolve ../../../../g"))))
+
 (defn main []
   (Array.sum
     &[(test-parsing)
       (test-escaping)
       (test-query-string-from-map)
-      (test-stringification)]))
+      (test-stringification)
+      (test-resolve)]))

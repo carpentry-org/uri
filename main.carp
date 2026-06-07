@@ -531,6 +531,141 @@ This is the inverse of `query-map-from-str`.")
   (doc parse "Parses a URI from a string `s`.")
   (defn parse [s] (URIParser.parse (URIParser.from-string s))))
 
+(defmodule URI
+  (private remove-last-segment)
+  (hidden remove-last-segment)
+  (defn remove-last-segment [s]
+    (let-do [last-slash -1]
+      (for [i 0 (length s)] (when (= (char-at s i) \/) (set! last-slash i)))
+      (if (< last-slash 0) @"" (slice s 0 last-slash))))
+
+  (private first-segment-end)
+  (hidden first-segment-end)
+  (defn first-segment-end [s]
+    (let-do [len (length s)
+             start (if (and (> len 0) (= (char-at s 0) \/)) 1 0)
+             i start]
+      (while (and (< i len) (/= (char-at s i) \/)) (set! i (inc i)))
+      i))
+
+  (doc remove-dot-segments "normalizes a path by resolving `.` and `..` segments
+following RFC 3986 section 5.2.4.")
+  (defn remove-dot-segments [path]
+    (let-do [input @path
+             output @""]
+      (while (not (empty? &input))
+        (let [ilen (length &input)]
+          (cond
+            (starts-with? &input "../") (set! input (slice &input 3 ilen))
+            (starts-with? &input "./") (set! input (slice &input 2 ilen))
+            (starts-with? &input "/./")
+              (set! input (concat &[@"/" (slice &input 3 ilen)]))
+            (= &input "/.") (set! input @"/")
+            (starts-with? &input "/../")
+              (do
+                (set! input (concat &[@"/" (slice &input 4 ilen)]))
+                (set! output (remove-last-segment &output)))
+            (= &input "/..")
+              (do (set! input @"/") (set! output (remove-last-segment &output)))
+            (or (= &input ".") (= &input "..")) (set! input @"")
+            (let-do [seg-end (first-segment-end &input)]
+              (set! output (concat &[output (slice &input 0 seg-end)]))
+              (set! input (slice &input seg-end ilen))))))
+      output))
+
+  (private normalize-path)
+  (hidden normalize-path)
+  (doc normalize-path
+    "prepends `/`, runs remove-dot-segments, strips leading `/`.")
+  (defn normalize-path [stored-path]
+    (let [full (concat &[@"/" @stored-path])
+          cleaned (remove-dot-segments &full)
+          clen (length &cleaned)]
+      (if (and (> clen 0) (starts-with? &cleaned "/"))
+        (slice &cleaned 1 clen)
+        cleaned)))
+
+  (private merge-paths)
+  (hidden merge-paths)
+  (defn merge-paths [base ref-path]
+    (if (and (just? (host base)) (empty? &(from @(path base) @"")))
+      (concat &[@"/" @ref-path])
+      (let-do [base-path (concat &[@"/" (from @(path base) @"")])
+               last-slash 0]
+        (for [i 0 (length &base-path)]
+          (when (= (char-at &base-path i) \/) (set! last-slash i)))
+        (concat &[(slice &base-path 0 (inc last-slash)) @ref-path]))))
+
+  (doc resolve "resolves a URI reference string `ref-str` against a base URI
+`base`, following RFC 3986 section 5. Returns the resolved absolute URI, or an
+error if the reference string cannot be parsed.
+
+```
+(def base (Result.unsafe-from-success (URI.parse \"http://a/b/c/d?q\")))
+(URI.resolve &base \"../g\")   ; => http://a/b/g
+(URI.resolve &base \"/g\")     ; => http://a/g
+(URI.resolve &base \"?y\")     ; => http://a/b/c/d?y
+```
+")
+  (sig resolve (Fn [(Ref URI) (Ref String)] (Result URI String)))
+  (defn resolve [base ref-str]
+    (match (URI.parse ref-str)
+      (Error e) (Error e)
+      (Success r)
+        (let [ref-path-abs (starts-with? ref-str "/")]
+          (Success
+            (cond
+              (just? (scheme &r))
+                (let [cleaned (normalize-path &(from @(path &r) @""))]
+                  (init @(scheme &r)
+                        @(host &r)
+                        @(port &r)
+                        (Just cleaned)
+                        @(query &r)
+                        @(user &r)
+                        @(password &r)
+                        @(fragment &r)
+                        @(opaque &r)))
+              (just? (host &r))
+                (let [cleaned (normalize-path &(from @(path &r) @""))]
+                  (init @(scheme base)
+                        @(host &r)
+                        @(port &r)
+                        (Just cleaned)
+                        @(query &r)
+                        @(user &r)
+                        @(password &r)
+                        @(fragment &r)
+                        (Nothing)))
+              (empty? &(from @(path &r) @""))
+                (init @(scheme base)
+                      @(host base)
+                      @(port base)
+                      @(path base)
+                      (if (just? (query &r)) @(query &r) @(query base))
+                      @(user base)
+                      @(password base)
+                      @(fragment &r)
+                      @(opaque base))
+              (let [r-path (from @(path &r) @"")
+                    target-path (if ref-path-abs
+                      (normalize-path &r-path)
+                      (let [merged (merge-paths base &r-path)
+                            cleaned (remove-dot-segments &merged)
+                            clen (length &cleaned)]
+                        (if (and (> clen 0) (starts-with? &cleaned "/"))
+                          (slice &cleaned 1 clen)
+                          cleaned)))]
+                (init @(scheme base)
+                      @(host base)
+                      @(port base)
+                      (Just target-path)
+                      @(query &r)
+                      @(user base)
+                      @(password base)
+                      @(fragment &r)
+                      (Nothing)))))))))
+
 (defmodule URICopy (defn = [u1 u2] (URI.= &u1 &u2)))
 (doc URI "is a `URI` datatype and parser for Carp.
 
