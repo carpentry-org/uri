@@ -135,9 +135,12 @@ string.
 (URI.str &uri) ; => \"http://admin:password@foo.com\"
 ```
 ")
+  ; N.B. `opaque?` is precomputed as a `Bool` and captured by the scheme lambda
+  ; below; capturing the managed `opaque` field directly and then consuming it
+  ; with `(from … @"")` would free the same string twice.
   (defn str [u]
     (let [s @(scheme u)
-          o @(opaque u)
+          opaque? (just? (opaque u))
           usr @(user u)
           q @(query u)
           h @(host u)
@@ -145,17 +148,17 @@ string.
           pth @(path u)
           f @(fragment u)]
       (concat
-        &[(from
-            (apply s &(fn [s] (concat &[s @":" @(if (just? &o) "" "//")])))
-            @"")
-          (from o @"")
+        &[(from (apply s &(fn [s] (concat &[s @":" @(if opaque? "" "//")]))) @"")
+          (from @(opaque u) @"")
           (from (apply usr &(fn [usr] (concat &[(userinfo u) @"@"]))) @"")
           (from h @"")
           (from
             (apply p
                    &(fn [p] (if (default-port? u) @"" (concat &[@":" (str p)]))))
             @"")
-          @"/"
+          ; opaque URIs (e.g. `mailto:a@b`) have no hierarchical part, so the
+          ; authority/path separator is suppressed for them.
+          @(if opaque? "" "/")
           (from pth @"")
           (from (apply q &(fn [q] (concat &[@"?" q]))) @"")
           (from (apply f &(fn [f] (concat &[@"#" f]))) @"")])))
@@ -516,9 +519,12 @@ This is the inverse of `query-map-from-str`.")
                   (set! res
                         (map res
                              &(fn [res]
+                               ; the opaque part is everything past the colon
                                (set-opaque res
-                                           (Just (from pref
-                                                       (dec (length (source pref)))))))))
+                                           (Just
+                                             (slice (source pref)
+                                                    (inc @(offset pref))
+                                                    (length (source pref))))))))
                   (break))))
           (do (set! res (parse-no-scheme (set-offset @&p 0) res)) (break))))
       res))

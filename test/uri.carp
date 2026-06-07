@@ -202,10 +202,42 @@
         &(resolved-str "g#s/../x")
         "resolve g#s/../x (dots in fragment are literal)"))))
 
+(defn test-opaque []
+  (do
+    (IO.println "## Opaque URIs")
+    (with-test test
+      (assert-equal test
+        &(Just @"mailto")
+        (scheme &(unsafe-from-success (URI.parse "mailto:veit@veitheller.de")))
+        "we parse the scheme of an opaque URI")
+      (assert-equal test
+        &(Just @"veit@veitheller.de")
+        (opaque &(unsafe-from-success (URI.parse "mailto:veit@veitheller.de")))
+        "we parse the opaque part as everything after the colon")
+      (assert-equal test
+        &(Just @"g")
+        (opaque &(unsafe-from-success (URI.parse "http:g")))
+        "single-character opaque parts are preserved")
+      ; round-tripping opaque URIs used to double-free in `str` and emit a
+      ; spurious trailing slash; these guard against regressions.
+      (assert-equal test
+        "mailto:veit@veitheller.de"
+        &(str &(unsafe-from-success (URI.parse "mailto:veit@veitheller.de")))
+        "we stringify an opaque URI back to the original")
+      (assert-equal test
+        "urn:isbn:0451450523"
+        &(str &(unsafe-from-success (URI.parse "urn:isbn:0451450523")))
+        "we stringify an opaque URI with colons in the opaque part")
+      (assert-equal test
+        "http:g"
+        &(str &(unsafe-from-success (URI.parse "http:g")))
+        "we stringify an opaque URI without a spurious trailing slash"))))
+
 (defn main []
   (Array.sum
     &[(test-parsing)
       (test-escaping)
       (test-query-string-from-map)
       (test-stringification)
-      (test-resolve)]))
+      (test-resolve)
+      (test-opaque)]))
