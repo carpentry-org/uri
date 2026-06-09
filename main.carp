@@ -370,11 +370,10 @@ This is the inverse of `query-map-from-str`.")
       res))
 
   (defn parse-relative-slash [p res]
-    (if (end? &p)
-      res
-      (if (= (nxt &p) \/)
-        (parse-authority (adv &p) res)
-        (parse-path (adv &p) res))))
+    (cond
+      (end? &p) res
+      (= (nxt &p) \/) (parse-authority (adv &p) res)
+      (parse-path (adv &p) res)))
 
   (defn parse-relative [p res]
     (if (end? &p)
