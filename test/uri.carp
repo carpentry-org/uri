@@ -82,7 +82,15 @@
       (assert-equal test
         &(Error @"Invalid URI: bad port at character 20")
         &(URI.parse "https://domain.tld:1ab3/")
-        "invalid ports lead to errors"))))
+        "invalid ports lead to errors")
+      (assert-equal test
+        10
+        (String.length &(escape "abcd efg"))
+        "escape output length matches visible content (no trailing NULs)")
+      (assert-equal test
+        8
+        (String.length &(unescape "abcd%20efg"))
+        "unescape output length matches visible content (no trailing NULs)"))))
 
 (defn test-query-string-from-map []
   (do
