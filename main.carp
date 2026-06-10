@@ -163,14 +163,19 @@ string.
           (from (apply q &(fn [q] (concat &[@"?" q]))) @"")
           (from (apply f &(fn [f] (concat &[@"#" f]))) @"")])))
 
-  (doc = "is defined as the equality of all members of URIs `u1` and `u2`.
-
-N.B.: We’re being cute by using string equality (which gets rid of differences
-between explicit/implicit port assignments). That might not always be
-desirable—and can be fairly slow.")
+  (doc = "is defined as the equality of all members of URIs `u1` and `u2`.")
   (sig = (Fn [(Ref URI) (Ref URI)] Bool))
   (implements = =)
-  (defn = [u1 u2] (= (str (the (Ref URI) u1)) (str u2)))
+  (defn = [u1 u2]
+    (and (= (scheme u1) (scheme u2))
+         (and (= (host u1) (host u2))
+              (and (= (port u1) (port u2))
+                   (and (= (path u1) (path u2))
+                        (and (= (query u1) (query u2))
+                             (and (= (user u1) (user u2))
+                                  (and (= (password u1) (password u2))
+                                       (and (= (fragment u1) (fragment u2))
+                                            (= (opaque u1) (opaque u2)))))))))))
 
   ; the escape mechanisms are inspired by janet’s uri library, written by
   ; Andrew Chambers.
@@ -199,45 +204,41 @@ desirable—and can be fairly slow.")
 
   (doc escape "URI escapes the string `s`.")
   (defn escape [s]
-    (let-do [a (Array.repeat (* (length s) 3) &zero)
-             cs (chars s)
-             idx 0]
+    (let-do [a []
+             cs (chars s)]
       (for [i 0 (Array.length &cs)]
         (let [c (Array.unsafe-nth &cs i)]
           (if (unreserved? @c)
-            (do (Array.aset! &a idx @c) (set! idx (inc idx)))
+            (Array.push-back! &a @c)
             (let-do [i (to-int @c)]
-              (Array.aset! &a idx \%)
-              (set! idx (inc idx))
-              (Array.aset! &a
-                           idx
-                           @(Array.unsafe-nth &chartab
-                                              (bit-shift-right (bit-and i 240) 4)))
-              (set! idx (inc idx))
-              (Array.aset! &a idx @(Array.unsafe-nth &chartab (bit-and i 15)))
-              (set! idx (inc idx))))))
+              (Array.push-back! &a \%)
+              (Array.push-back! &a
+                                @(Array.unsafe-nth &chartab
+                                                   (bit-shift-right (bit-and i
+                                                                             240)
+                                                                    4)))
+              (Array.push-back! &a @(Array.unsafe-nth &chartab (bit-and i 15)))))))
       (from-chars &a)))
 
-  (doc escape "URI unescapes the string `s`.")
+  (doc unescape "URI unescapes the string `s`.")
   (defn unescape [s]
-    (let-do [a (Array.repeat (* (length s) 3) &zero)
-             n 0
+    (let-do [a []
              cs (chars s)]
       (for [i 0 (Array.length &cs)]
-        (let-do [c @(Array.unsafe-nth &cs i)]
+        (let [c @(Array.unsafe-nth &cs i)]
           (if (and (= \% c) (< (+ i 2) (Array.length &cs)))
             (do
-              (Array.aset! &a
-                           n
-                           (from-int
-                             (bit-or
-                               (bit-shift-left
-                                 (decode-nibble @(Array.unsafe-nth &cs (inc i)))
-                                 4)
-                               (decode-nibble @(Array.unsafe-nth &cs (+ i 2))))))
+              (Array.push-back! &a
+                                (from-int
+                                  (bit-or
+                                    (bit-shift-left
+                                      (decode-nibble @(Array.unsafe-nth &cs
+                                                                        (inc i)))
+                                      4)
+                                    (decode-nibble @(Array.unsafe-nth &cs
+                                                                      (+ i 2))))))
               (set! i (+ i 2)))
-            (Array.aset! &a n c))
-          (set! n (inc n))))
+            (Array.push-back! &a c))))
       (from-chars &a)))
 
   (doc query-map-from-str "parses the querystring as a `Map` and returns it,
