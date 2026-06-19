@@ -309,13 +309,11 @@ This is the inverse of `query-map-from-str`.")
              pref &p
              st @(offset &p)]
       (while true
-        (cond
-          (end? &p)
-            (do
-              (set! res
-                    (map res
-                         &(fn [res] (set-fragment res (Just (from pref st))))))
-              (break))
+        (if (end? &p)
+          (do
+            (set! res
+                  (map res &(fn [res] (set-fragment res (Just (from pref st))))))
+            (break))
           (set! p (adv &p))))
       res))
 
@@ -519,7 +517,6 @@ This is the inverse of `query-map-from-str`.")
                   (set! res
                         (map res
                              &(fn [res]
-                               ; the opaque part is everything past the colon
                                (set-opaque res
                                            (Just
                                              (slice (source pref)
@@ -581,8 +578,6 @@ following RFC 3986 section 5.2.4.")
 
   (private normalize-path)
   (hidden normalize-path)
-  (doc normalize-path
-    "prepends `/`, runs remove-dot-segments, strips leading `/`.")
   ; N.B. This relies on the parser storing paths without a leading `/` (the
   ; parser strips it). If that invariant changes, the prepend/strip pattern
   ; here would need updating.
