@@ -54,6 +54,14 @@
           (query-map-from-str "key%20one=val%20one&key2=val2"))
         "query-map-from-str percent-decodes keys and values")
       (assert-equal test
+        &{@"token" @"a=b=c"}
+        &(unsafe-from-success (query-map-from-str "token=a=b=c"))
+        "query-map-from-str splits only on first = so values with = parse")
+      (assert-equal test
+        &{@"k" @""}
+        &(unsafe-from-success (query-map-from-str "k="))
+        "query-map-from-str handles empty value after =")
+      (assert-equal test
         &(Just @"fragment")
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
