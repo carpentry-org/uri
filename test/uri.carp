@@ -54,6 +54,24 @@
           (query-map-from-str "key%20one=val%20one&key2=val2"))
         "query-map-from-str percent-decodes keys and values")
       (assert-equal test
+        &{@"data" @"abc=def"}
+        &(unsafe-from-success (query-map-from-str "data=abc=def"))
+        "query-map-from-str handles = in values")
+      (assert-equal test
+        &{@"token" @"eyJ=="}
+        &(unsafe-from-success (query-map-from-str "token=eyJ=="))
+        "query-map-from-str handles trailing = in values (base64)")
+      (assert-equal test
+        &{@"a" @"1"
+          @"b" @"x=y"
+          @"c" @"3"}
+        &(unsafe-from-success (query-map-from-str "a=1&b=x=y&c=3"))
+        "query-map-from-str handles = in values mixed with normal params")
+      (assert-equal test
+        &{@"key" @""}
+        &(unsafe-from-success (query-map-from-str "key="))
+        "query-map-from-str handles empty values")
+      (assert-equal test
         &(Just @"fragment")
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
