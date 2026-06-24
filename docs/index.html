@@ -32,7 +32,7 @@
                 <div class="module-description">
                     <p>is a <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.3.0&quot;)
+<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.3.1&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -68,9 +68,6 @@ through a lot of pain and suffering!</p>
                     </pre>
                     <p class="doc">
                         <p>is defined as the equality of all members of URIs <code>u1</code> and <code>u2</code>.</p>
-<p>N.B.: We’re being cute by using string equality (which gets rid of differences
-between explicit/implicit port assignments). That might not always be
-desirable—and can be fairly slow.</p>
 
                     </p>
                 </div>
@@ -213,7 +210,7 @@ we know of—and their port values.</p>
                         (escape s)
                     </pre>
                     <p class="doc">
-                        <p>URI unescapes the string <code>s</code>.</p>
+                        <p>URI escapes the string <code>s</code>.</p>
 
                     </p>
                 </div>
@@ -1018,7 +1015,8 @@ string.</p>
                         (unescape s)
                     </pre>
                     <p class="doc">
-                        
+                        <p>URI unescapes the string <code>s</code>.</p>
+
                     </p>
                 </div>
                 <div class="binder">

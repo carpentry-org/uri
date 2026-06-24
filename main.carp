@@ -682,7 +682,7 @@ error if the reference string cannot be parsed.
 ## Installation
 
 ```clojure
-(load \"git@github.com:carpentry-org/uri@0.3.0\")
+(load \"git@github.com:carpentry-org/uri@0.3.1\")
 ```
 
 ## Usage
