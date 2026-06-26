@@ -259,8 +259,8 @@ It can fail if the querystring is malformed, and will then return an `Error`.")
                   (when (and (= eq-idx -1) (= (char-at x i) \=)) (set! eq-idx i)))
                 (if (= eq-idx -1)
                   (Error (fmt "Query parameter %s malformed." x))
-                  (let [k (unescape (slice x 0 eq-idx))
-                        v (unescape (slice x (inc eq-idx) len))]
+                  (let [k (unescape (String.slice x 0 eq-idx))
+                        v (unescape (String.slice x (inc eq-idx) len))]
                     (Success (Map.put m &k &v)))))))
         (Success {})
         &(split-by s &[\&]))))
