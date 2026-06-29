@@ -78,7 +78,32 @@
       (assert-equal test
         &(Just @"")
         (path &(unsafe-from-success (URI.parse "/")))
-        "we can parse relative URIs"))))
+        "we can parse relative URIs")
+      ; an authority directly followed by ?query or #fragment (no path between)
+      ; used to route the query/fragment text into the path, dropping it
+      (assert-equal test
+        &(Just @"q=1")
+        (query &(unsafe-from-success (URI.parse "http://foo.com?q=1")))
+        "a query directly after the host is captured, not swallowed as the path")
+      (assert-true test
+        (nothing? (path &(unsafe-from-success (URI.parse "http://foo.com?q=1"))))
+        "no path is set when the authority is directly followed by a query")
+      (assert-equal test
+        &(Just @"frag")
+        (fragment &(unsafe-from-success (URI.parse "http://foo.com#frag")))
+        "a fragment directly after the host is captured, not swallowed as the path")
+      (assert-equal test
+        &(Just @"q=1")
+        (query &(unsafe-from-success (URI.parse "http://foo.com:8080?q=1")))
+        "a query directly after host:port is captured, not swallowed as the path")
+      (assert-equal test
+        &(Just 8080)
+        (port &(unsafe-from-success (URI.parse "http://foo.com:8080?q=1")))
+        "the port still parses when it is directly followed by a query")
+      (assert-equal test
+        &(Just @"frag")
+        (fragment &(unsafe-from-success (URI.parse "http://foo.com:8080#frag")))
+        "a fragment directly after host:port is captured, not swallowed as the path"))))
 
 (defn test-escaping []
   (do
