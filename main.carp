@@ -407,12 +407,19 @@ This is the inverse of `query-map-from-str`.")
           (num? &p) (set! p (adv &p))
           (end-of-host? &p)
             (do
+              ; like `parse-host`: only `/` introduces a path; `?`/`#` go to the
+              ; query/fragment parsers so they are not swallowed as the path.
               (set! res
-                    (parse-path (adv &p)
-                                (map res
-                                     &(fn [res]
-                                       (set-port res
-                                                 (Int.from-string &(from pref st)))))))
+                    (let [r (map res
+                                 &(fn [res]
+                                   (set-port res
+                                             (Int.from-string &(from pref st)))))]
+                      (case (c &p)
+                            \?
+                            (parse-query @&p r)
+                            \#
+                            (parse-fragment @&p r)
+                            (parse-path (adv &p) r))))
               (break))
           (do
             (set! res
@@ -444,11 +451,20 @@ This is the inverse of `query-map-from-str`.")
                 (break))
             (end-of-host? &p)
               (do
+                ; a `/`, `?`, or `#` ends the host, but only `/` introduces a
+                ; path. `?` and `#` must go to the query/fragment parsers (which
+                ; consume their own delimiter), mirroring `parse-relative`;
+                ; routing them all to `parse-path` swallowed the query/fragment.
                 (set! res
-                      (parse-path (adv &p)
-                                  (map res
-                                       &(fn [res]
-                                         (set-host res (Just (from pref st)))))))
+                      (let [r (map res
+                                   &(fn [res]
+                                     (set-host res (Just (from pref st)))))]
+                        (case (c &p)
+                              \?
+                              (parse-query @&p r)
+                              \#
+                              (parse-fragment @&p r)
+                              (parse-path (adv &p) r))))
                 (break))
             (do
               (when (= (c &p) \[) (set! bracket-flag true))
