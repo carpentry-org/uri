@@ -72,6 +72,30 @@
         &(unsafe-from-success (query-map-from-str "key="))
         "query-map-from-str handles empty values")
       (assert-equal test
+        &{@"flag" @""}
+        &(unsafe-from-success (query-map-from-str "flag"))
+        "query-map-from-str reads a valueless parameter as an empty value")
+      (assert-equal test
+        &{@"a" @"1"
+          @"debug" @""
+          @"c" @"3"}
+        &(unsafe-from-success (query-map-from-str "a=1&debug&c=3"))
+        "query-map-from-str handles valueless params mixed with normal ones")
+      (assert-equal test
+        &{@"a" @""
+          @"b" @""}
+        &(unsafe-from-success (query-map-from-str "a&b"))
+        "query-map-from-str handles several valueless params")
+      (assert-equal test
+        &{@"my flag" @""}
+        &(unsafe-from-success (query-map-from-str "my%20flag"))
+        "query-map-from-str percent-decodes a valueless key")
+      (assert-equal test
+        &{@"flag" @""}
+        &(unsafe-from-success
+          (query-map &(unsafe-from-success (URI.parse "http://foo.com/?flag"))))
+        "query-map reads a valueless parameter from a parsed URI")
+      (assert-equal test
         &(Just @"fragment")
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
