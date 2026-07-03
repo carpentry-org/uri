@@ -251,7 +251,8 @@ string.
 percent-decoding keys and values.
 
 A parameter without a value, such as `flag` in `?flag`, is stored with an empty
-string as its value. The result is wrapped in a `Result` for API compatibility.")
+string as its value. Empty segments, such as a trailing or doubled `&`, are
+skipped. The result is wrapped in a `Result` for API compatibility.")
   (defn query-map-from-str [s]
     (if (= s "")
       (Success {})
@@ -262,8 +263,10 @@ string as its value. The result is wrapped in a `Result` for API compatibility."
             (Success m)
               (match (first-eq-index x)
                 (Nothing)
-                  (let [k (unescape x)
-                        v @""] (Success (Map.put m &k &v)))
+                  (if (String.empty? x)
+                    (Success m)
+                    (let [k (unescape x)
+                          v @""] (Success (Map.put m &k &v))))
                 (Just i)
                   (let [k (unescape &(slice x 0 i))
                         v (unescape &(slice x (inc i) (length x)))]
@@ -275,7 +278,8 @@ string as its value. The result is wrapped in a `Result` for API compatibility."
 percent-decoding keys and values.
 
 A parameter without a value, such as `flag` in `?flag`, is stored with an empty
-string as its value. The result is wrapped in a `Result` for API compatibility.")
+string as its value. Empty segments, such as a trailing or doubled `&`, are
+skipped. The result is wrapped in a `Result` for API compatibility.")
   (defn query-map [u]
     (match @(query u) (Nothing) (Success {}) (Just s) (query-map-from-str &s)))
 

@@ -91,6 +91,19 @@
         &(unsafe-from-success (query-map-from-str "my%20flag"))
         "query-map-from-str percent-decodes a valueless key")
       (assert-equal test
+        &{@"a" @"1"}
+        &(unsafe-from-success (query-map-from-str "a=1&"))
+        "query-map-from-str skips a trailing empty segment")
+      (assert-equal test
+        &{@"a" @"1"}
+        &(unsafe-from-success (query-map-from-str "&a=1"))
+        "query-map-from-str skips a leading empty segment")
+      (assert-equal test
+        &{@"a" @""
+          @"b" @""}
+        &(unsafe-from-success (query-map-from-str "a&&b"))
+        "query-map-from-str skips a doubled empty segment")
+      (assert-equal test
         &{@"flag" @""}
         &(unsafe-from-success
           (query-map &(unsafe-from-success (URI.parse "http://foo.com/?flag"))))
