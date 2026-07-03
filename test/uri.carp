@@ -174,7 +174,36 @@
       (assert-equal test
         "key%20one=val%20one"
         &(query-string-from-map &{@"key one" @"val one"})
-        "query-string-from-map percent-encodes keys and values"))))
+        "query-string-from-map percent-encodes keys and values")
+      (assert-equal test
+        "flag="
+        &(query-string-from-map &{@"flag" @""})
+        "an empty value is encoded as a bare key= pair")
+      (assert-equal test
+        &{@"flag" @""}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"flag" @""})))
+        "encode then parse round-trips a lone empty value")
+      (assert-equal test
+        &{@"a" @"1"
+          @"debug" @""
+          @"key" @"val"}
+        &(unsafe-from-success
+          (query-map-from-str
+            &(query-string-from-map &{@"a" @"1"
+                                      @"debug" @""
+                                      @"key" @"val"})))
+        "encode then parse round-trips empty values mixed with normal ones")
+      (assert-equal test
+        &{@"a b" @"c&d"}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"a b" @"c&d"})))
+        "encode then parse round-trips keys and values needing escaping")
+      (assert-equal test
+        &{@"section=x" @"y"}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"section=x" @"y"})))
+        "an = inside a key is escaped, so the round-trip is unambiguous"))))
 
 (defn test-stringification []
   (do
