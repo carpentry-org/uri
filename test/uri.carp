@@ -72,6 +72,43 @@
         &(unsafe-from-success (query-map-from-str "key="))
         "query-map-from-str handles empty values")
       (assert-equal test
+        &{@"flag" @""}
+        &(unsafe-from-success (query-map-from-str "flag"))
+        "query-map-from-str reads a valueless parameter as an empty value")
+      (assert-equal test
+        &{@"a" @"1"
+          @"debug" @""
+          @"c" @"3"}
+        &(unsafe-from-success (query-map-from-str "a=1&debug&c=3"))
+        "query-map-from-str handles valueless params mixed with normal ones")
+      (assert-equal test
+        &{@"a" @""
+          @"b" @""}
+        &(unsafe-from-success (query-map-from-str "a&b"))
+        "query-map-from-str handles several valueless params")
+      (assert-equal test
+        &{@"my flag" @""}
+        &(unsafe-from-success (query-map-from-str "my%20flag"))
+        "query-map-from-str percent-decodes a valueless key")
+      (assert-equal test
+        &{@"a" @"1"}
+        &(unsafe-from-success (query-map-from-str "a=1&"))
+        "query-map-from-str skips a trailing empty segment")
+      (assert-equal test
+        &{@"a" @"1"}
+        &(unsafe-from-success (query-map-from-str "&a=1"))
+        "query-map-from-str skips a leading empty segment")
+      (assert-equal test
+        &{@"a" @""
+          @"b" @""}
+        &(unsafe-from-success (query-map-from-str "a&&b"))
+        "query-map-from-str skips a doubled empty segment")
+      (assert-equal test
+        &{@"flag" @""}
+        &(unsafe-from-success
+          (query-map &(unsafe-from-success (URI.parse "http://foo.com/?flag"))))
+        "query-map reads a valueless parameter from a parsed URI")
+      (assert-equal test
         &(Just @"fragment")
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
@@ -150,7 +187,36 @@
       (assert-equal test
         "key%20one=val%20one"
         &(query-string-from-map &{@"key one" @"val one"})
-        "query-string-from-map percent-encodes keys and values"))))
+        "query-string-from-map percent-encodes keys and values")
+      (assert-equal test
+        "flag="
+        &(query-string-from-map &{@"flag" @""})
+        "an empty value is encoded as a bare key= pair")
+      (assert-equal test
+        &{@"flag" @""}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"flag" @""})))
+        "encode then parse round-trips a lone empty value")
+      (assert-equal test
+        &{@"a" @"1"
+          @"debug" @""
+          @"key" @"val"}
+        &(unsafe-from-success
+          (query-map-from-str
+            &(query-string-from-map &{@"a" @"1"
+                                      @"debug" @""
+                                      @"key" @"val"})))
+        "encode then parse round-trips empty values mixed with normal ones")
+      (assert-equal test
+        &{@"a b" @"c&d"}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"a b" @"c&d"})))
+        "encode then parse round-trips keys and values needing escaping")
+      (assert-equal test
+        &{@"section=x" @"y"}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"section=x" @"y"})))
+        "an = inside a key is escaped, so the round-trip is unambiguous"))))
 
 (defn test-stringification []
   (do
