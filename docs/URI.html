@@ -32,7 +32,7 @@
                 <div class="module-description">
                     <p>is a <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.3.1&quot;)
+<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.3.2&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -479,7 +479,9 @@ IPv6 addresses.</p>
                     <p class="doc">
                         <p>parses the querystring as a <code>Map</code> and returns it,
 percent-decoding keys and values.</p>
-<p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
+<p>A parameter without a value, such as <code>flag</code> in <code>?flag</code>, is stored with an empty
+string as its value. Empty segments, such as a trailing or doubled <code>&amp;</code>, are
+skipped. The result is wrapped in a <code>Result</code> for API compatibility.</p>
 
                     </p>
                 </div>
@@ -501,7 +503,9 @@ percent-decoding keys and values.</p>
                     <p class="doc">
                         <p>parses the querystring as a <code>Map</code> and returns it,
 percent-decoding keys and values.</p>
-<p>It can fail if the querystring is malformed, and will then return an <code>Error</code>.</p>
+<p>A parameter without a value, such as <code>flag</code> in <code>?flag</code>, is stored with an empty
+string as its value. Empty segments, such as a trailing or doubled <code>&amp;</code>, are
+skipped. The result is wrapped in a <code>Result</code> for API compatibility.</p>
 
                     </p>
                 </div>
