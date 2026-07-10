@@ -344,6 +344,101 @@
         &(str &(unsafe-from-success (URI.parse "http:g")))
         "we stringify an opaque URI without a spurious trailing slash"))))
 
+(defn normalized-str [s] (str &(normalize &(unsafe-from-success (URI.parse s)))))
+
+(defn test-normalize []
+  (do
+    (IO.println "## Normalize (RFC 3986 Section 6.2)")
+    (with-test test
+      ; case normalization (section 6.2.2.1)
+      (assert-equal test
+        "http://example.com/"
+        &(normalized-str "HTTP://EXAMPLE.COM/")
+        "scheme and host are lower-cased")
+      (assert-equal test
+        &(Just @"http")
+        (scheme &(normalize &(unsafe-from-success (URI.parse "HtTp://x/"))))
+        "scheme is lower-cased at the field level")
+      (assert-equal test
+        &(Just @"example.com")
+        (host
+          &(normalize &(unsafe-from-success (URI.parse "http://Example.COM/"))))
+        "host is lower-cased at the field level")
+      (assert-equal test
+        "http://User:PaSs@example.com/PaTh?QuErY=V#FrAg"
+        &(normalized-str "HTTP://User:PaSs@Example.com/PaTh?QuErY=V#FrAg")
+        "userinfo, path, query and fragment keep their case")
+      ; percent-encoding normalization (sections 6.2.2.1 and 6.2.2.2)
+      (assert-equal test
+        "http://example.com/~user"
+        &(normalized-str "http://example.com/%7Euser")
+        "percent-encoded unreserved characters are decoded")
+      (assert-equal test
+        "http://example.com/a-b_c.d~e"
+        &(normalized-str "http://example.com/%61-%62_%63.%64~%65")
+        "all classes of unreserved percent-escapes are decoded")
+      (assert-equal test
+        "http://example.com/a%3Ab"
+        &(normalized-str "http://example.com/a%3ab")
+        "hex digits of retained percent-escapes are upper-cased")
+      (assert-equal test
+        "http://example.com/a%40b"
+        &(normalized-str "http://example.com/a%40b")
+        "reserved percent-escapes are retained (encoded @ preserved)")
+      (assert-equal test
+        "http://example.com/x%2Fy"
+        &(normalized-str "http://example.com/x%2fy")
+        "an encoded slash is preserved, not treated as a path separator")
+      ; path segment normalization (section 6.2.2.3)
+      (assert-equal test
+        "http://example.com/a/g"
+        &(normalized-str "http://example.com/a/b/c/../../g")
+        "dot segments are removed from the path")
+      ; default-port removal (section 6.2.3)
+      (assert-equal test
+        &(the (Maybe Int) (Nothing))
+        (port
+          &(normalize
+            &(unsafe-from-success (URI.parse "http://example.com:80/"))))
+        "the default port for a scheme is dropped")
+      (assert-equal test
+        &(the (Maybe Int) (Nothing))
+        (port
+          &(normalize
+            &(unsafe-from-success (URI.parse "HTTP://example.com:80/"))))
+        "the default port is dropped even when the scheme needed lower-casing")
+      (assert-equal test
+        &(Just 8080)
+        (port
+          &(normalize
+            &(unsafe-from-success (URI.parse "http://example.com:8080/"))))
+        "a non-default port is kept")
+      ; opaque URIs
+      (assert-equal test
+        "mailto:John.Doe@Example.COM"
+        &(normalized-str "MAILTO:John.Doe@Example.COM")
+        "an opaque URI’s scheme is lower-cased but its opaque part keeps its case")
+      (assert-equal test
+        "mailto:a~b"
+        &(normalized-str "mailto:a%7eb")
+        "percent-escapes in the opaque part are normalized")
+      ; idempotence
+      (let [once (normalize
+              &(unsafe-from-success
+                (URI.parse "HTTP://User@Example.COM:80/%7Ea/./b/../c")))
+            twice (normalize &once)]
+        (assert-true test (URI.= &once &twice) "normalize is idempotent"))
+      ; the headline use case: equivalent URIs normalize to the same value
+      (assert-true test
+        (URI.=
+          &(normalize
+            &(unsafe-from-success
+              (URI.parse "HTTP://User@Example.com:80/%7Ejoe/./index.html")))
+          &(normalize
+            &(unsafe-from-success
+              (URI.parse "http://User@example.com/~joe/index.html"))))
+        "equivalent URIs written differently normalize to the same value"))))
+
 (defn main []
   (Array.sum
     &[(test-parsing)
@@ -351,4 +446,5 @@
       (test-query-string-from-map)
       (test-stringification)
       (test-resolve)
-      (test-opaque)]))
+      (test-opaque)
+      (test-normalize)]))

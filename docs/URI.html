@@ -322,6 +322,46 @@ IPv6 addresses.</p>
                     </p>
                 </div>
                 <div class="binder">
+                    <a class="anchor" href="#normalize">
+                        <h3 id="normalize">
+                            normalize
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI StaticLifetime)] URI)
+                    </p>
+                    <pre class="args">
+                        (normalize u)
+                    </pre>
+                    <p class="doc">
+                        <p>normalizes a URI <code>u</code> following RFC 3986 section 6.2, returning
+an equivalent URI in a canonical form. This makes two URIs that denote the same
+resource compare equal under <code>URI.=</code>.</p>
+<p>The following transformations are applied:</p>
+<ul>
+<li><strong>Case normalization</strong> (§6.2.2.1): the scheme and host are lower-cased, and
+the hexadecimal digits of percent-encoded triplets are upper-cased.</li>
+<li><strong>Percent-encoding normalization</strong> (§6.2.2.2): percent-encoded octets that
+correspond to unreserved characters (<code>ALPHA</code> / <code>DIGIT</code> / <code>-</code> / <code>.</code> / <code>_</code> /
+<code>~</code>) are decoded to their literal form.</li>
+<li><strong>Path segment normalization</strong> (§6.2.2.3): <code>.</code> and <code>..</code> segments are removed
+from the path.</li>
+<li><strong>Default-port removal</strong> (§6.2.3): a port equal to the scheme’s default is
+dropped.</li>
+</ul>
+<p>Case-sensitive components (userinfo, path, query, and fragment) keep their
+case; only their percent-encoding is normalized.</p>
+<pre><code>(URI.str &amp;(URI.normalize &amp;(Result.unsafe-from-success
+  (URI.parse &quot;HTTP://User@Example.COM:80/%7Ejoe/./index.html&quot;))))
+; =&gt; “http://User@example.com/~joe/index.html”
+</code></pre>
+
+                    </p>
+                </div>
+                <div class="binder">
                     <a class="anchor" href="#opaque">
                         <h3 id="opaque">
                             opaque

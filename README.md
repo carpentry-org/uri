@@ -41,6 +41,23 @@ URI parameters.
 (URI.remove-dot-segments "/a/b/c/./../../g") ; => "/a/g"
 ```
 
+### Normalizing URIs
+
+`URI.normalize` brings a URI into the canonical form described by [RFC 3986
+section 6.2](https://www.rfc-editor.org/rfc/rfc3986#section-6.2), so that two
+URIs denoting the same resource compare equal under `URI.=`:
+
+```clojure
+(def u (Result.unsafe-from-success
+         (URI.parse "HTTP://User@Example.COM:80/%7Ejoe/./index.html")))
+(URI.str &(URI.normalize &u)) ; => "http://User@example.com/~joe/index.html"
+```
+
+It lower-cases the scheme and host, upper-cases the hex digits of retained
+percent-escapes, decodes percent-escaped unreserved characters, removes `.`/`..`
+segments from the path, and drops a port that equals the scheme's default. The
+case of the userinfo, path, query, and fragment is preserved.
+
 A more complete documentation can be found under [https://veitheller.de/uri/](https://veitheller.de/uri)!
 
 ## Acknowledgements
