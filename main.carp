@@ -793,6 +793,12 @@ The following transformations are applied:
 Case-sensitive components (userinfo, path, query, and fragment) keep their
 case; only their percent-encoding is normalized.
 
+Note: because `.` is unreserved, a percent-encoded dot (`%2E`) is decoded
+(§6.2.2.2) and then resolved by dot-segment removal (§6.2.2.3), so
+`/a/%2E%2E/b` normalizes to `/b`. An encoded `..` therefore collapses just
+like a literal one, which callers using `normalize` for path-prefix
+security checks should account for.
+
 ```
 (URI.str &(URI.normalize &(Result.unsafe-from-success
   (URI.parse \"HTTP://User@Example.COM:80/%7Ejoe/./index.html\"))))

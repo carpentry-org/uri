@@ -394,6 +394,10 @@
         "http://example.com/a/g"
         &(normalized-str "http://example.com/a/b/c/../../g")
         "dot segments are removed from the path")
+      (assert-equal test
+        "http://example.com/b"
+        &(normalized-str "http://example.com/a/%2E%2E/b")
+        "a percent-encoded dot-segment (%2E%2E) is decoded and then removed")
       ; default-port removal (section 6.2.3)
       (assert-equal test
         &(the (Maybe Int) (Nothing))
