@@ -700,6 +700,124 @@ error if the reference string cannot be parsed.
                       @(fragment &r)
                       (Nothing)))))))))
 
+(defmodule URI
+  (private hex-digit?)
+  (hidden hex-digit?)
+  (defn hex-digit? [c]
+    (or (and (>= c \0) (<= c \9))
+        (and (>= c \a) (<= c \f))
+        (and (>= c \A) (<= c \F))))
+
+  (private lower-char)
+  (hidden lower-char)
+  (defn lower-char [c] (if (Char.upper-case? c) (from-int (+ (to-int c) 32)) c))
+
+  (private upper-hex)
+  (hidden upper-hex)
+  (defn upper-hex [c]
+    (if (and (>= c \a) (<= c \f)) (from-int (- (to-int c) 32)) c))
+
+  (private lower-str)
+  (hidden lower-str)
+  (defn lower-str [s]
+    (let-do [cs (chars s)
+             a []]
+      (for [i 0 (Array.length &cs)]
+        (Array.push-back! &a (lower-char @(Array.unsafe-nth &cs i))))
+      (from-chars &a)))
+
+  (doc normalize-pct "normalizes the percent-encoding in `s` per RFC 3986
+section 6.2.2: percent-encoded octets of unreserved characters are decoded to
+their literal form, and the hexadecimal digits of the remaining triplets are
+upper-cased. When `lower?` is set, unencoded letters (and decoded unreserved
+letters) are lower-cased, as required for the host component.")
+  (private normalize-pct)
+  (hidden normalize-pct)
+  (defn normalize-pct [s lower?]
+    (let-do [cs (chars s)
+             n (Array.length &cs)
+             a []
+             i 0]
+      (while (< i n)
+        (let [c @(Array.unsafe-nth &cs i)]
+          (if (and (= c \%)
+                   (< (+ i 2) n)
+                   (hex-digit? @(Array.unsafe-nth &cs (inc i)))
+                   (hex-digit? @(Array.unsafe-nth &cs (+ i 2))))
+            (let-do [hi @(Array.unsafe-nth &cs (inc i))
+                     lo @(Array.unsafe-nth &cs (+ i 2))
+                     b (bit-or (bit-shift-left (decode-nibble hi) 4)
+                               (decode-nibble lo))
+                     dc (from-int b)]
+              (if (unreserved? dc)
+                (Array.push-back! &a (if lower? (lower-char dc) dc))
+                (do
+                  (Array.push-back! &a \%)
+                  (Array.push-back! &a (upper-hex hi))
+                  (Array.push-back! &a (upper-hex lo))))
+              (set! i (+ i 3)))
+            (do
+              (Array.push-back! &a (if lower? (lower-char c) c))
+              (set! i (inc i))))))
+      (from-chars &a)))
+
+  (private normalized-port)
+  (hidden normalized-port)
+  (defn normalized-port [sch prt]
+    (match-ref prt
+      (Maybe.Nothing) (Maybe.Nothing)
+      (Maybe.Just p)
+        (match-ref sch
+          (Maybe.Nothing) (Maybe.Just @p)
+          (Maybe.Just s)
+            (match (Map.get-maybe &default-ports s)
+              (Maybe.Just dp) (if (= @p dp) (Maybe.Nothing) (Maybe.Just @p))
+              (Maybe.Nothing) (Maybe.Just @p)))))
+
+  (doc normalize "normalizes a URI `u` following RFC 3986 section 6.2, returning
+an equivalent URI in a canonical form. This makes two URIs that denote the same
+resource compare equal under `URI.=`.
+
+The following transformations are applied:
+
+- **Case normalization** (§6.2.2.1): the scheme and host are lower-cased, and
+  the hexadecimal digits of percent-encoded triplets are upper-cased.
+- **Percent-encoding normalization** (§6.2.2.2): percent-encoded octets that
+  correspond to unreserved characters (`ALPHA` / `DIGIT` / `-` / `.` / `_` /
+  `~`) are decoded to their literal form.
+- **Path segment normalization** (§6.2.2.3): `.` and `..` segments are removed
+  from the path.
+- **Default-port removal** (§6.2.3): a port equal to the scheme’s default is
+  dropped.
+
+Case-sensitive components (userinfo, path, query, and fragment) keep their
+case; only their percent-encoding is normalized.
+
+Note: because `.` is unreserved, a percent-encoded dot (`%2E`) is decoded
+(§6.2.2.2) and then resolved by dot-segment removal (§6.2.2.3), so
+`/a/%2E%2E/b` normalizes to `/b`. An encoded `..` therefore collapses just
+like a literal one, which callers using `normalize` for path-prefix
+security checks should account for.
+
+```
+(URI.str &(URI.normalize &(Result.unsafe-from-success
+  (URI.parse \"HTTP://User@Example.COM:80/%7Ejoe/./index.html\"))))
+; => “http://User@example.com/~joe/index.html”
+```
+")
+  (defn normalize [u]
+    (let [sch (apply @(scheme u) &(fn [s] (lower-str &s)))
+          prt (normalized-port &sch (port u))
+          hst (apply @(host u) &(fn [h] (normalize-pct &h true)))
+          usr (apply @(user u) &(fn [x] (normalize-pct &x false)))
+          pwd (apply @(password u) &(fn [x] (normalize-pct &x false)))
+          pth (apply @(path u)
+                     &(fn [p] (normalize-path &(normalize-pct &p false))))
+          qry (apply @(query u) &(fn [x] (normalize-pct &x false)))
+          frg (apply @(fragment u) &(fn [x] (normalize-pct &x false)))
+          opq (apply @(opaque u) &(fn [x] (normalize-pct &x false)))]
+      (init sch hst prt pth qry usr pwd frg opq))))
+
 (defmodule URICopy (defn = [u1 u2] (URI.= &u1 &u2)))
 (doc URI "is a `URI` datatype and parser for Carp.
 
