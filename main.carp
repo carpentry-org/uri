@@ -200,46 +200,55 @@ string.
 
   (private chartab)
   (hidden chartab)
-  (def chartab [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \a \b \c \d \e \f])
+  (def chartab [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \A \B \C \D \E \F])
 
-  (doc escape "URI escapes the string `s`.")
+  (doc escape "URI escapes the string `s`, percent-encoding every byte that is
+not an unreserved ASCII character. Multi-byte UTF-8 characters are encoded one
+byte at a time, so the output is standard, interoperable percent-encoding.")
   (defn escape [s]
     (let-do [a []
-             cs (chars s)]
-      (for [i 0 (Array.length &cs)]
-        (let [c (Array.unsafe-nth &cs i)]
-          (if (unreserved? @c)
-            (Array.push-back! &a @c)
-            (let-do [i (to-int @c)]
+             bs (String.to-bytes s)]
+      (for [i 0 (Array.length &bs)]
+        (let [n (Byte.to-int @(Array.unsafe-nth &bs i))
+              c (from-int n)]
+          (if (unreserved? c)
+            (Array.push-back! &a c)
+            (do
               (Array.push-back! &a \%)
               (Array.push-back! &a
                                 @(Array.unsafe-nth &chartab
-                                                   (bit-shift-right (bit-and i
+                                                   (bit-shift-right (bit-and n
                                                                              240)
                                                                     4)))
-              (Array.push-back! &a @(Array.unsafe-nth &chartab (bit-and i 15)))))))
+              (Array.push-back! &a @(Array.unsafe-nth &chartab (bit-and n 15)))))))
       (from-chars &a)))
 
-  (doc unescape "URI unescapes the string `s`.")
+  (private nibble-at)
+  (hidden nibble-at)
+  (defn nibble-at [bs i]
+    (decode-nibble (from-int (Byte.to-int @(Array.unsafe-nth bs i)))))
+
+  (doc unescape
+    "URI unescapes the string `s`, decoding each percent-triplet into
+a single byte and copying all other bytes through verbatim. UTF-8 characters
+that were percent-encoded byte by byte are therefore reassembled correctly.")
   (defn unescape [s]
     (let-do [a []
-             cs (chars s)]
-      (for [i 0 (Array.length &cs)]
-        (let [c @(Array.unsafe-nth &cs i)]
-          (if (and (= \% c) (< (+ i 2) (Array.length &cs)))
+             bs (String.to-bytes s)
+             n (Array.length &bs)]
+      (for [i 0 n]
+        (let [b @(Array.unsafe-nth &bs i)]
+          ; 37b is the byte value of `%`
+          (if (and (= b 37b) (< (+ i 2) n))
             (do
               (Array.push-back! &a
-                                (from-int
+                                (Byte.from-int
                                   (bit-or
-                                    (bit-shift-left
-                                      (decode-nibble @(Array.unsafe-nth &cs
-                                                                        (inc i)))
-                                      4)
-                                    (decode-nibble @(Array.unsafe-nth &cs
-                                                                      (+ i 2))))))
+                                    (bit-shift-left (nibble-at &bs (inc i)) 4)
+                                    (nibble-at &bs (+ i 2)))))
               (set! i (+ i 2)))
-            (Array.push-back! &a c))))
-      (from-chars &a)))
+            (Array.push-back! &a b))))
+      (String.from-bytes &a)))
 
   (defn- first-eq-index [s]
     (let-do [len (length s)
