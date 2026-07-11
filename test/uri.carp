@@ -160,6 +160,46 @@
         &(unescape "test%2")
         "unescape passes through percent with only one hex digit at end")
       (assert-equal test
+        "%C3%A9"
+        &(escape "é")
+        "escape percent-encodes a Latin-1 character as its two UTF-8 bytes")
+      (assert-equal test
+        "%E4%B8%AD"
+        &(escape "中")
+        "escape percent-encodes a CJK character as its three UTF-8 bytes")
+      (assert-equal test
+        "%F0%9F%98%80"
+        &(escape "😀")
+        "escape percent-encodes an astral character as its four UTF-8 bytes")
+      (assert-equal test
+        "a%20%C3%A9%20z"
+        &(escape "a é z")
+        "escape handles ASCII and multi-byte characters in the same string")
+      (assert-equal test
+        "é"
+        &(unescape "%C3%A9")
+        "unescape reassembles UTF-8 bytes into a Latin-1 character")
+      (assert-equal test
+        "😀"
+        &(unescape "%F0%9F%98%80")
+        "unescape reassembles UTF-8 bytes into an astral character")
+      (assert-equal test
+        "é"
+        &(unescape "%c3%a9")
+        "unescape accepts lower-case hex digits")
+      (assert-equal test
+        "é"
+        &(unescape &(escape "é"))
+        "escape/unescape round-trip a Latin-1 character")
+      (assert-equal test
+        "中文"
+        &(unescape &(escape "中文"))
+        "escape/unescape round-trip CJK characters")
+      (assert-equal test
+        "😀🎉"
+        &(unescape &(escape "😀🎉"))
+        "escape/unescape round-trip astral characters")
+      (assert-equal test
         &(Error @"Invalid URI: bad port at character 20")
         &(URI.parse "https://domain.tld:1ab3/")
         "invalid ports lead to errors")
@@ -216,7 +256,12 @@
         &{@"section=x" @"y"}
         &(unsafe-from-success
           (query-map-from-str &(query-string-from-map &{@"section=x" @"y"})))
-        "an = inside a key is escaped, so the round-trip is unambiguous"))))
+        "an = inside a key is escaped, so the round-trip is unambiguous")
+      (assert-equal test
+        &{@"name" @"café"}
+        &(unsafe-from-success
+          (query-map-from-str &(query-string-from-map &{@"name" @"café"})))
+        "encode then parse round-trips a non-ASCII value as UTF-8"))))
 
 (defn test-stringification []
   (do
