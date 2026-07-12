@@ -273,6 +273,33 @@
           s
           "we can convert our representation to a string again correctly")))))
 
+(defn fp [s] (full-path &(unsafe-from-success (URI.parse s))))
+
+(defn test-full-path []
+  (do
+    (IO.println "## Full path")
+    (with-test test
+      (assert-equal test
+        "/posts?id=30&limit=5"
+        &(fp "http://foo.com/posts?id=30&limit=5#time=1305298413")
+        "full-path keeps the leading slash and appends the query")
+      (assert-equal test
+        "/a/b/c"
+        &(fp "http://foo.com/a/b/c")
+        "full-path keeps the leading slash on a multi-segment path")
+      (assert-equal test
+        "/"
+        &(fp "http://foo.com/")
+        "full-path of a bare trailing slash is /")
+      (assert-equal test
+        "/"
+        &(fp "http://foo.com")
+        "full-path of a URI with no path is /")
+      (assert-equal test
+        "/?q=1"
+        &(fp "http://foo.com?q=1")
+        "full-path of a query-only URI is /?..."))))
+
 (def base-uri "http://a/b/c/d;p?q")
 
 (defn resolved-str [ref-str]
@@ -494,6 +521,7 @@
       (test-escaping)
       (test-query-string-from-map)
       (test-stringification)
+      (test-full-path)
       (test-resolve)
       (test-opaque)
       (test-normalize)]))

@@ -97,7 +97,11 @@ IPv6 addresses.
                (slice &h 1 (Int.dec (length &h)))
                h))))
 
-  (doc full-path "returns the full path of a URI `u`.
+  (doc full-path "returns the full path of a URI `u`, i.e. the origin-form
+request target: the path followed by `?` and the query when one is present.
+
+The result always begins with `/`; a URI with no path (or an empty path)
+yields `/`.
 
 ```
 (def uri (URI.parse \"http://foo.com/posts?id=30&limit=5#time=1305298413\"))
@@ -106,7 +110,7 @@ IPv6 addresses.
 ")
   (defn full-path [u]
     (let [q (from @(query u) @"")]
-      (concat &[(from @(path u) @"/") (if (String.empty? &q) @"" @"?") q])))
+      (concat &[@"/" (from @(path u) @"") (if (String.empty? &q) @"" @"?") q])))
 
   (doc absolute? "checks whether a URI `u` is absolute.")
   (defn absolute? [u] (just? (scheme u)))
