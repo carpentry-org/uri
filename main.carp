@@ -232,6 +232,13 @@ byte at a time, so the output is standard, interoperable percent-encoding.")
   (defn nibble-at [bs i]
     (decode-nibble (from-int (Byte.to-int @(Array.unsafe-nth bs i)))))
 
+  (private hex-byte?)
+  (hidden hex-byte?)
+  (defn hex-byte? [bs i]
+    (let [c (from-int (Byte.to-int @(Array.unsafe-nth bs i)))]
+      (or (and (>= c \0) (<= c \9))
+          (or (and (>= c \a) (<= c \f)) (and (>= c \A) (<= c \F))))))
+
   (doc unescape
     "URI unescapes the string `s`, decoding each percent-triplet into
 a single byte and copying all other bytes through verbatim. UTF-8 characters
@@ -242,8 +249,11 @@ that were percent-encoded byte by byte are therefore reassembled correctly.")
              n (Array.length &bs)]
       (for [i 0 n]
         (let [b @(Array.unsafe-nth &bs i)]
-          ; 37b is the byte value of `%`
-          (if (and (= b 37b) (< (+ i 2) n))
+          ; 37b is the byte value of `%`; only decode a triplet when both
+          ; following bytes are hex, otherwise copy the `%` through verbatim
+          (if (and (= b 37b)
+                   (and (< (+ i 2) n)
+                        (and (hex-byte? &bs (inc i)) (hex-byte? &bs (+ i 2)))))
             (do
               (Array.push-back! &a
                                 (Byte.from-int
