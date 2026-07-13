@@ -188,6 +188,22 @@
         &(unescape "%c3%a9")
         "unescape accepts lower-case hex digits")
       (assert-equal test
+        "%zz"
+        &(unescape "%zz")
+        "unescape passes an invalid hex triplet through verbatim")
+      (assert-equal test
+        "a%2gb"
+        &(unescape "a%2gb")
+        "unescape passes a triplet with a non-hex digit through verbatim")
+      (assert-equal test
+        " %zz"
+        &(unescape "%20%zz")
+        "unescape decodes valid triplets while passing invalid ones through")
+      (assert-equal test
+        5
+        (String.length &(unescape "a%zzb"))
+        "unescape does not inject a NUL for an invalid triplet (no truncation)")
+      (assert-equal test
         "é"
         &(unescape &(escape "é"))
         "escape/unescape round-trip a Latin-1 character")
