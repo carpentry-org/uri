@@ -32,7 +32,7 @@
                 <div class="module-description">
                     <p>is a <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.3.2&quot;)
+<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.4.0&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -210,7 +210,9 @@ we know of—and their port values.</p>
                         (escape s)
                     </pre>
                     <p class="doc">
-                        <p>URI escapes the string <code>s</code>.</p>
+                        <p>URI escapes the string <code>s</code>, percent-encoding every byte that is
+not an unreserved ASCII character. Multi-byte UTF-8 characters are encoded one
+byte at a time, so the output is standard, interoperable percent-encoding.</p>
 
                     </p>
                 </div>
@@ -250,7 +252,10 @@ we know of—and their port values.</p>
                         (full-path u)
                     </pre>
                     <p class="doc">
-                        <p>returns the full path of a URI <code>u</code>.</p>
+                        <p>returns the full path of a URI <code>u</code>, i.e. the origin-form
+request target: the path followed by <code>?</code> and the query when one is present.</p>
+<p>The result always begins with <code>/</code>; a URI with no path (or an empty path)
+yields <code>/</code>.</p>
 <pre><code>(def uri (URI.parse &quot;http://foo.com/posts?id=30&amp;limit=5#time=1305298413&quot;))
 (URI.full-path &amp;uri) ; =&gt; /posts?id=30&amp;limit=5
 </code></pre>
@@ -318,6 +323,51 @@ IPv6 addresses.</p>
                     </span>
                     <p class="doc">
                         <p>creates a <code>URI</code>.</p>
+
+                    </p>
+                </div>
+                <div class="binder">
+                    <a class="anchor" href="#normalize">
+                        <h3 id="normalize">
+                            normalize
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI StaticLifetime)] URI)
+                    </p>
+                    <pre class="args">
+                        (normalize u)
+                    </pre>
+                    <p class="doc">
+                        <p>normalizes a URI <code>u</code> following RFC 3986 section 6.2, returning
+an equivalent URI in a canonical form. This makes two URIs that denote the same
+resource compare equal under <code>URI.=</code>.</p>
+<p>The following transformations are applied:</p>
+<ul>
+<li><strong>Case normalization</strong> (§6.2.2.1): the scheme and host are lower-cased, and
+the hexadecimal digits of percent-encoded triplets are upper-cased.</li>
+<li><strong>Percent-encoding normalization</strong> (§6.2.2.2): percent-encoded octets that
+correspond to unreserved characters (<code>ALPHA</code> / <code>DIGIT</code> / <code>-</code> / <code>.</code> / <code>_</code> /
+<code>~</code>) are decoded to their literal form.</li>
+<li><strong>Path segment normalization</strong> (§6.2.2.3): <code>.</code> and <code>..</code> segments are removed
+from the path.</li>
+<li><strong>Default-port removal</strong> (§6.2.3): a port equal to the scheme’s default is
+dropped.</li>
+</ul>
+<p>Case-sensitive components (userinfo, path, query, and fragment) keep their
+case; only their percent-encoding is normalized.</p>
+<p>Note: because <code>.</code> is unreserved, a percent-encoded dot (<code>%2E</code>) is decoded
+(§6.2.2.2) and then resolved by dot-segment removal (§6.2.2.3), so
+<code>/a/%2E%2E/b</code> normalizes to <code>/b</code>. An encoded <code>..</code> therefore collapses just
+like a literal one, which callers using <code>normalize</code> for path-prefix
+security checks should account for.</p>
+<pre><code>(URI.str &amp;(URI.normalize &amp;(Result.unsafe-from-success
+  (URI.parse &quot;HTTP://User@Example.COM:80/%7Ejoe/./index.html&quot;))))
+; =&gt; “http://User@example.com/~joe/index.html”
+</code></pre>
 
                     </p>
                 </div>
@@ -1019,7 +1069,9 @@ string.</p>
                         (unescape s)
                     </pre>
                     <p class="doc">
-                        <p>URI unescapes the string <code>s</code>.</p>
+                        <p>URI unescapes the string <code>s</code>, decoding each percent-triplet into
+a single byte and copying all other bytes through verbatim. UTF-8 characters
+that were percent-encoded byte by byte are therefore reassembled correctly.</p>
 
                     </p>
                 </div>
