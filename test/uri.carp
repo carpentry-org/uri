@@ -531,6 +531,62 @@
               (URI.parse "http://User@example.com/~joe/index.html"))))
         "equivalent URIs written differently normalize to the same value"))))
 
+(defn test-remove-dot-segments []
+  (do
+    (IO.println "## Remove dot segments (RFC 3986 Section 5.2.4)")
+    (with-test test
+      (assert-equal test
+        "/a/g"
+        &(URI.remove-dot-segments "/a/b/c/./../../g")
+        "the canonical RFC 3986 5.2.4 example collapses to /a/g")
+      (assert-equal test
+        "mid/6"
+        &(URI.remove-dot-segments "mid/content=5/../6")
+        "the RFC 3986 5.2.4 relative example collapses to mid/6")
+      (assert-equal test
+        "/x"
+        &(URI.remove-dot-segments "/../../x")
+        "leading .. cannot pop below the root (underflow is a no-op)")
+      (assert-equal test
+        ""
+        &(URI.remove-dot-segments "")
+        "an empty path stays empty")
+      (assert-equal test
+        "/"
+        &(URI.remove-dot-segments "/")
+        "a bare slash is preserved")
+      (assert-equal test
+        "/a/b"
+        &(URI.remove-dot-segments "/a/./b")
+        "an interior /./ is collapsed")
+      (assert-equal test
+        "/a/"
+        &(URI.remove-dot-segments "/a/.")
+        "a trailing /. leaves a bare slash")
+      (assert-equal test
+        "/"
+        &(URI.remove-dot-segments "/a/..")
+        "a trailing /.. pops the last segment down to the root")
+      (assert-equal test
+        "/a/"
+        &(URI.remove-dot-segments "/a/b/..")
+        "a trailing /.. pops just the last segment")
+      (assert-equal test
+        "/foo/.bar"
+        &(URI.remove-dot-segments "/foo/.bar")
+        "a segment that merely begins with a dot is not a dot-segment")
+      (assert-equal test "" &(URI.remove-dot-segments ".") "a bare . is dropped")
+      (assert-equal test
+        ""
+        &(URI.remove-dot-segments "..")
+        "a bare .. is dropped")
+      ; many alternating . and .. segments — also a smoke test that the
+      ; single-pass rewrite stays linear on long adversarial input
+      (assert-equal test
+        "/a/f"
+        &(URI.remove-dot-segments "/a/./b/./c/./d/./e/../../../../f")
+        "a long run of . and .. segments collapses correctly"))))
+
 (defn main []
   (Array.sum
     &[(test-parsing)
@@ -538,6 +594,7 @@
       (test-query-string-from-map)
       (test-stringification)
       (test-full-path)
+      (test-remove-dot-segments)
       (test-resolve)
       (test-opaque)
       (test-normalize)]))
