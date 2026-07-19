@@ -588,46 +588,65 @@ This is the inverse of `query-map-from-str`.")
   (defn parse [s] (URIParser.parse (URIParser.from-string s))))
 
 (defmodule URI
-  (private remove-last-segment)
-  (hidden remove-last-segment)
-  (defn remove-last-segment [s]
-    (let-do [last-slash -1]
-      (for [i 0 (length s)] (when (= (char-at s i) \/) (set! last-slash i)))
-      (if (< last-slash 0) @"" (slice s 0 last-slash))))
-
-  (private first-segment-end)
-  (hidden first-segment-end)
-  (defn first-segment-end [s]
-    (let-do [len (length s)
-             start (if (and (> len 0) (= (char-at s 0) \/)) 1 0)
-             i start]
-      (while (and (< i len) (/= (char-at s i) \/)) (set! i (inc i)))
-      i))
+  (private pop-last)
+  (hidden pop-last)
+  (defn pop-last [output] (unless (empty? output) (ignore (pop-back! output))))
 
   (doc remove-dot-segments "normalizes a path by resolving `.` and `..` segments
-following RFC 3986 section 5.2.4.")
+following RFC 3986 section 5.2.4.
+
+Runs in a single linear pass: a byte cursor walks the input once and output
+segments are collected on a stack, so an `n`-segment path costs `O(n)` instead
+of the quadratic slicing a literal transcription of the RFC would incur.")
   (defn remove-dot-segments [path]
-    (let-do [input @path
-             output @""]
-      (while (not (empty? &input))
-        (let [ilen (length &input)]
+    (let-do [n (length path)
+             i 0
+             output (the (Array String) [])]
+      (while (< i n)
+        (let [c0 (char-at path i)
+              rem (- n i)]
           (cond
-            (starts-with? &input "../") (set! input (slice &input 3 ilen))
-            (starts-with? &input "./") (set! input (slice &input 2 ilen))
-            (starts-with? &input "/./")
-              (set! input (concat &[@"/" (slice &input 3 ilen)]))
-            (= &input "/.") (set! input @"/")
-            (starts-with? &input "/../")
-              (do
-                (set! input (concat &[@"/" (slice &input 4 ilen)]))
-                (set! output (remove-last-segment &output)))
-            (= &input "/..")
-              (do (set! input @"/") (set! output (remove-last-segment &output)))
-            (or (= &input ".") (= &input "..")) (set! input @"")
-            (let-do [seg-end (first-segment-end &input)]
-              (set! output (concat &[output (slice &input 0 seg-end)]))
-              (set! input (slice &input seg-end ilen))))))
-      output))
+            ; A: leading "../" or "./" — drop
+            (and (>= rem 3)
+                 (= c0 \.)
+                 (= (char-at path (+ i 1)) \.)
+                 (= (char-at path (+ i 2)) \/))
+            (set! i (+ i 3))
+            (and (>= rem 2) (= c0 \.) (= (char-at path (+ i 1)) \/))
+            (set! i (+ i 2))
+            ; B: "/./" — collapse onto the leading "/"
+            (and (>= rem 3)
+                 (= c0 \/)
+                 (= (char-at path (+ i 1)) \.)
+                 (= (char-at path (+ i 2)) \/))
+            (set! i (+ i 2))
+            ; a trailing "/." contributes a lone "/"
+            (and (= rem 2) (= c0 \/) (= (char-at path (+ i 1)) \.))
+            (do (push-back! &output @"/") (set! i n))
+            ; C: "/../" — collapse to "/" and pop the last output segment
+            (and (>= rem 4)
+                 (= c0 \/)
+                 (= (char-at path (+ i 1)) \.)
+                 (= (char-at path (+ i 2)) \.)
+                 (= (char-at path (+ i 3)) \/))
+            (do (pop-last &output) (set! i (+ i 3)))
+            ; a trailing "/.." pops the last segment, then contributes a "/"
+            (and (= rem 3)
+                 (= c0 \/)
+                 (= (char-at path (+ i 1)) \.)
+                 (= (char-at path (+ i 2)) \.))
+            (do (pop-last &output) (push-back! &output @"/") (set! i n))
+            ; D: a bare "." or ".." — drop
+            (or (and (= rem 1) (= c0 \.))
+                (and (= rem 2) (= c0 \.) (= (char-at path (+ i 1)) \.)))
+            (set! i n)
+            ; E: move the next segment, with its leading "/" if any, to output
+            (let-do [start (if (= c0 \/) (+ i 1) i)
+                     j start]
+              (while (and (< j n) (/= (char-at path j) \/)) (set! j (inc j)))
+              (push-back! &output (byte-slice path i j))
+              (set! i j)))))
+      (concat &output)))
 
   (private normalize-path)
   (hidden normalize-path)
