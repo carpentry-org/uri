@@ -279,6 +279,62 @@
           (query-map-from-str &(query-string-from-map &{@"name" @"café"})))
         "encode then parse round-trips a non-ASCII value as UTF-8"))))
 
+(defn multimap-of [s] (unsafe-from-success (query-multimap-from-str s)))
+
+(defn test-query-multimap []
+  (do
+    (IO.println "## Query Multimap")
+    (with-test test
+      (assert-true test
+        (= &{@"a" [@"1" @"2" @"3"]} &(multimap-of "a=1&a=2&a=3"))
+        "query-multimap-from-str keeps every value for a repeated key, in order")
+      (assert-true test
+        (= &{@"key" [@"val"]} &(multimap-of "key=val"))
+        "query-multimap-from-str stores a single value as a one-element array")
+      (assert-true test
+        (= &{@"flag" [@""]} &(multimap-of "flag"))
+        "query-multimap-from-str reads a valueless key as a single empty value")
+      (assert-true test
+        (= &{@"a" [@"1" @"2"]
+             @"b" [@"x"]} &(multimap-of "a=1&b=x&a=2"))
+        "query-multimap-from-str keeps repeated and single keys together")
+      (assert-true test
+        (= &(the (Map String (Array String)) {}) &(multimap-of ""))
+        "query-multimap-from-str maps an empty string to an empty map")
+      (assert-true test
+        (= &{@"na me" [@"a b" @"c d"]}
+           &(multimap-of "na%20me=a%20b&na%20me=c%20d"))
+        "query-multimap-from-str percent-decodes keys and repeated values")
+      (assert-true test
+        (= &{@"a" [@"1" @"2"]} &(multimap-of "a=1&&a=2&"))
+        "query-multimap-from-str skips empty segments while accumulating")
+      (assert-true test
+        (= &{@"flag" [@"" @""]} &(multimap-of "flag&flag"))
+        "query-multimap-from-str preserves both occurrences of a valueless key")
+      (assert-true test
+        (= &{@"tag" [@"a" @"b"]}
+           &(unsafe-from-success
+             (query-multimap
+               &(unsafe-from-success (URI.parse "http://x/?tag=a&tag=b")))))
+        "query-multimap reads and preserves repeated keys from a parsed URI")
+      (assert-true test
+        (= &(the (Map String (Array String)) {})
+           &(unsafe-from-success
+             (query-multimap &(unsafe-from-success (URI.parse "http://x/")))))
+        "query-multimap of a URI without a query is an empty map")
+      (assert-equal test
+        &[@"a" @"b"]
+        &(query-values
+          &(unsafe-from-success (URI.parse "http://x/?tag=a&tag=b"))
+          "tag")
+        "query-values returns every value for a repeated key, in order")
+      (assert-equal test
+        &(the (Array String) [])
+        &(query-values
+          &(unsafe-from-success (URI.parse "http://x/?tag=a"))
+          "missing")
+        "query-values yields an empty array for an absent key"))))
+
 (defn test-stringification []
   (do
     (IO.println "## Stringification")
@@ -592,6 +648,7 @@
     &[(test-parsing)
       (test-escaping)
       (test-query-string-from-map)
+      (test-query-multimap)
       (test-stringification)
       (test-full-path)
       (test-remove-dot-segments)
