@@ -86,8 +86,8 @@ port for its `scheme`.")
 IPv6 addresses.
 
 ```
-(URI.hostname &(URI.parse \"http://[::1]/bar\")) ; => ::1
-(URI.hostname &(URI.parse \"http://[::1]/bar\")) ; => [::1]
+(URI.hostname &(URI.parse \"http://[::1]/bar\"))   ; => ::1
+(URI.hostname &(URI.parse \"http://foo.com/bar\")) ; => foo.com
 ```
 ")
   (defn hostname [u]

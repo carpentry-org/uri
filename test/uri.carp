@@ -25,7 +25,7 @@
       (assert-equal test
         &(Just @"domain.tld")
         (host &(unsafe-from-success (URI.parse uri)))
-        "we can parse and get the password correctly")
+        "we can parse and get the host correctly")
       (assert-equal test
         &(Just 123)
         (port &(unsafe-from-success (URI.parse uri)))
