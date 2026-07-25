@@ -21,6 +21,24 @@ you’ll get the original URI back.
 You can also ask the `URI` for its properties, like the scheme, the port, or the
 URI parameters.
 
+### Query parameters
+
+`URI.query-map` parses the query component into a `Map String String`. Since a
+map holds one value per key, repeated keys such as `?tag=a&tag=b` keep only the
+last value. When repeated keys matter—checkbox lists, multi-select forms,
+`?id=1&id=2`—use `URI.query-multimap`, which collects every value for a key into
+an `Array`, in the order it appeared:
+
+```clojure
+(def u (Result.unsafe-from-success (URI.parse "http://x/?tag=a&tag=b&sort=asc")))
+(URI.query-multimap &u)      ; => Success {"tag" ["a" "b"] "sort" ["asc"]}
+(URI.query-values &u "tag")  ; => ["a" "b"]
+```
+
+`URI.query-values` returns just the values for one key (empty when it is absent),
+and `URI.query-multimap-from-str` does the same as `query-multimap` for a bare
+querystring.
+
 ### Resolving relative references
 
 `URI.resolve` resolves a relative URI reference against a base URI, following

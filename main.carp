@@ -306,6 +306,60 @@ skipped. The result is wrapped in a `Result` for API compatibility.")
   (defn query-map [u]
     (match @(query u) (Nothing) (Success {}) (Just s) (query-map-from-str &s)))
 
+  (defn- multimap-append [m k v]
+    (match (Map.get-maybe &m &k)
+      (Just existing) (Map.put m &k &(Array.push-back existing v))
+      (Nothing) (Map.put m &k &[v])))
+
+  (doc query-multimap-from-str "parses the querystring, collecting every value
+for a key into an `Array` in encounter order, and returns the result,
+percent-decoding keys and values.
+
+Unlike `query-map-from-str`, repeated keys such as `a` in `a=1&a=2` are all kept
+instead of overwritten. A parameter without a value, such as `flag` in `?flag`,
+contributes a single empty-string value. Empty segments, such as a trailing or
+doubled `&`, are skipped. The result is wrapped in a `Result` for API
+compatibility.")
+  (defn query-multimap-from-str [s]
+    (if (= s "")
+      (Success {})
+      (reduce
+        &(fn [a x]
+          (match a
+            (Error err) (Error err)
+            (Success m)
+              (match (first-eq-index x)
+                (Nothing)
+                  (if (String.empty? x)
+                    (Success m)
+                    (Success (multimap-append m (unescape x) @"")))
+                (Just i)
+                  (Success
+                    (multimap-append m
+                                     (unescape &(slice x 0 i))
+                                     (unescape &(slice x (inc i) (length x))))))))
+        (the (Result (Map String (Array String)) String) (Success {}))
+        &(split-by s &[\&]))))
+
+  (doc query-multimap "parses the querystring, collecting every value for a key
+into an `Array` in encounter order, and returns the result, percent-decoding
+keys and values.
+
+This mirrors `query-map` but preserves repeated keys; see
+`query-multimap-from-str` for the exact edge-case semantics.")
+  (defn query-multimap [u]
+    (match @(query u)
+      (Nothing) (Success {})
+      (Just s) (query-multimap-from-str &s)))
+
+  (doc query-values "returns every value supplied for the query parameter `k` in
+URI `u`, in encounter order and percent-decoded. A key that is absent yields an
+empty `Array`.")
+  (defn query-values [u k]
+    (match (query-multimap u)
+      (Error _) []
+      (Success m) (from (Map.get-maybe &m k) [])))
+
   (doc query-string-from-map "converts a `Map` of query parameters back into a
 querystring, percent-encoding keys and values.
 
