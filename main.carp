@@ -477,6 +477,24 @@ This is the inverse of `query-map-from-str`.")
             (parse-fragment p res)
             (parse-path p res))))
 
+  (defn significant-digits [digits]
+    (let-do [i 0
+             stop (dec (length digits))]
+      (while (and (< i stop) (= (char-at digits i) \0)) (set! i (inc i)))
+      (suffix digits i)))
+
+  (defn set-parsed-port [res digits off]
+    (match res
+      (Result.Error e) (Error e)
+      (Result.Success u)
+        (if (String.empty? digits)
+          (Success (set-port u (Nothing)))
+          (let [n (Maybe.from (Int.from-string digits) 0)]
+            ; strtol overflows silently, so require a round-trip
+            (if (= &(Int.str n) &(significant-digits digits))
+              (Success (set-port u (Just n)))
+              (Error (fmt "Invalid URI: bad port at character %d" off)))))))
+
   (defn parse-port [p res]
     (let-do [st @(offset &p)
              pref &p]
@@ -484,10 +502,7 @@ This is the inverse of `query-map-from-str`.")
         (cond
           (end? &p)
             (do
-              (set! res
-                    (map res
-                         &(fn [res]
-                           (set-port res (Int.from-string &(from pref st))))))
+              (set! res (set-parsed-port res &(from pref st) @(offset &p)))
               (break))
           (num? &p) (set! p (adv &p))
           (end-of-host? &p)
@@ -495,10 +510,7 @@ This is the inverse of `query-map-from-str`.")
               ; like `parse-host`: only `/` introduces a path; `?`/`#` go to the
               ; query/fragment parsers so they are not swallowed as the path.
               (set! res
-                    (let [r (map res
-                                 &(fn [res]
-                                   (set-port res
-                                             (Int.from-string &(from pref st)))))]
+                    (let [r (set-parsed-port res &(from pref st) @(offset &p))]
                       (case (c &p)
                             \?
                             (parse-query @&p r)

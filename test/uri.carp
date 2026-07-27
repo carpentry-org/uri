@@ -142,6 +142,127 @@
         (fragment &(unsafe-from-success (URI.parse "http://foo.com:8080#frag")))
         "a fragment directly after host:port is captured, not swallowed as the path"))))
 
+(defn test-ports []
+  (do
+    (IO.println "## Ports")
+    (with-test test
+      (assert-true test
+        (nothing? (port &(unsafe-from-success (URI.parse "http://a.com:/x"))))
+        "an empty port before a path is Nothing, not 0")
+      (assert-true test
+        (nothing? (port &(unsafe-from-success (URI.parse "http://a.com:"))))
+        "an empty port at the end of the input is Nothing, not 0")
+      (assert-true test
+        (nothing? (port &(unsafe-from-success (URI.parse "http://a.com:?q=1"))))
+        "an empty port before a query is Nothing, not 0")
+      (assert-true test
+        (nothing? (port &(unsafe-from-success (URI.parse "http://a.com:#f"))))
+        "an empty port before a fragment is Nothing, not 0")
+      (assert-equal test
+        &(Just @"x")
+        (path &(unsafe-from-success (URI.parse "http://a.com:/x")))
+        "a path after an empty port is still captured")
+      (assert-equal test
+        &(Just @"q=1")
+        (query &(unsafe-from-success (URI.parse "http://a.com:?q=1")))
+        "a query after an empty port is still captured")
+      (assert-equal test
+        &(Just @"f")
+        (fragment &(unsafe-from-success (URI.parse "http://a.com:#f")))
+        "a fragment after an empty port is still captured")
+      (assert-false test
+        (default-port? &(unsafe-from-success (URI.parse "http://a.com:/x")))
+        "an empty port is not the scheme’s default port")
+      (assert-equal test
+        &(Just 0)
+        (port &(unsafe-from-success (URI.parse "http://a.com:0/x")))
+        "an explicit zero port is a real port, not an empty one")
+      (assert-equal test
+        &(Just 0)
+        (port &(unsafe-from-success (URI.parse "http://a.com:000/x")))
+        "a zero port written with leading zeros is a real port")
+      (assert-equal test
+        &(Just 7)
+        (port &(unsafe-from-success (URI.parse "http://a.com:007/x")))
+        "leading zeros in a port are ignored")
+      (assert-equal test
+        &(Just 2147483647)
+        (port &(unsafe-from-success (URI.parse "http://a.com:2147483647/x")))
+        "the largest representable port is accepted")
+      (assert-equal test
+        &(Just 2147483647)
+        (port &(unsafe-from-success (URI.parse "http://a.com:0002147483647/x")))
+        "the largest representable port is accepted with leading zeros")
+      (assert-equal test
+        &(Error @"Invalid URI: bad port at character 24")
+        &(URI.parse "http://a.com:99999999999/x")
+        "a port that overflows is rejected instead of being clamped")
+      (assert-equal test
+        &(Error @"Invalid URI: bad port at character 24")
+        &(URI.parse "http://a.com:99999999999")
+        "a port that overflows at the end of the input is rejected")
+      (assert-equal test
+        &(Error @"Invalid URI: bad port at character 23")
+        &(URI.parse "http://a.com:2147483648/x")
+        "a port one past the largest representable one is rejected")
+      (assert-equal test
+        &(Error @"Invalid URI: bad port at character 23")
+        &(URI.parse "http://a.com:4294967296/x")
+        "a ten-digit port that overflows is rejected")
+      (assert-equal test
+        &(Error @"Invalid URI: bad port at character 13")
+        &(URI.parse "http://a.com:-5/x")
+        "a negative port is an error")
+      (assert-equal test
+        &(Error @"Invalid URI: bad port at character 14")
+        &(URI.parse "http://a.com:8a/x")
+        "a port with a trailing letter is an error")
+      (assert-equal test
+        "http://a.com/x"
+        &(URI.str &(unsafe-from-success (URI.parse "http://a.com:/x")))
+        "an empty port is dropped together with its colon")
+      (assert-equal test
+        "http://a.com/"
+        &(URI.str &(unsafe-from-success (URI.parse "http://a.com:")))
+        "an empty port at the end of the input is dropped together with its colon")
+      (assert-equal test
+        "http://a.com/?q=1"
+        &(URI.str &(unsafe-from-success (URI.parse "http://a.com:?q=1")))
+        "an empty port before a query is dropped together with its colon")
+      (assert-equal test
+        "http://a.com/#f"
+        &(URI.str &(unsafe-from-success (URI.parse "http://a.com:#f")))
+        "an empty port before a fragment is dropped together with its colon")
+      (assert-equal test
+        "http://a.com:0/x"
+        &(URI.str &(unsafe-from-success (URI.parse "http://a.com:0/x")))
+        "an explicit zero port survives stringification")
+      (assert-equal test
+        "http://a.com/x"
+        &(URI.str
+          &(normalize &(unsafe-from-success (URI.parse "http://a.com:/x"))))
+        "an empty port is gone after normalization")
+      (assert-equal test
+        "http://a.com/?q=1"
+        &(URI.str
+          &(normalize &(unsafe-from-success (URI.parse "http://a.com:?q=1"))))
+        "an empty port before a query is gone after normalization")
+      (assert-equal test
+        "http://a.com/#f"
+        &(URI.str
+          &(normalize &(unsafe-from-success (URI.parse "http://a.com:#f"))))
+        "an empty port before a fragment is gone after normalization")
+      (assert-equal test
+        "http://a.com/"
+        &(URI.str
+          &(normalize &(unsafe-from-success (URI.parse "http://a.com:"))))
+        "an empty port at the end of the input is gone after normalization")
+      (assert-equal test
+        "http://a.com:0/x"
+        &(URI.str
+          &(normalize &(unsafe-from-success (URI.parse "http://a.com:0/x"))))
+        "an explicit zero port survives normalization"))))
+
 (defn test-escaping []
   (do
     (IO.println "## Escaping")
@@ -646,6 +767,7 @@
 (defn main []
   (Array.sum
     &[(test-parsing)
+      (test-ports)
       (test-escaping)
       (test-query-string-from-map)
       (test-query-multimap)
