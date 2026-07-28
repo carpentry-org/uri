@@ -222,15 +222,15 @@
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:/x")))
         "an empty port is dropped together with its colon")
       (assert-equal test
-        "http://a.com/"
+        "http://a.com"
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:")))
         "an empty port at the end of the input is dropped together with its colon")
       (assert-equal test
-        "http://a.com/?q=1"
+        "http://a.com?q=1"
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:?q=1")))
         "an empty port before a query is dropped together with its colon")
       (assert-equal test
-        "http://a.com/#f"
+        "http://a.com#f"
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:#f")))
         "an empty port before a fragment is dropped together with its colon")
       (assert-equal test
@@ -243,17 +243,17 @@
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:/x"))))
         "an empty port is gone after normalization")
       (assert-equal test
-        "http://a.com/?q=1"
+        "http://a.com?q=1"
         &(URI.str
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:?q=1"))))
         "an empty port before a query is gone after normalization")
       (assert-equal test
-        "http://a.com/#f"
+        "http://a.com#f"
         &(URI.str
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:#f"))))
         "an empty port before a fragment is gone after normalization")
       (assert-equal test
-        "http://a.com/"
+        "http://a.com"
         &(URI.str
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:"))))
         "an empty port at the end of the input is gone after normalization")
