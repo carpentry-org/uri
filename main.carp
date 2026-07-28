@@ -139,31 +139,29 @@ string.
 (URI.str &uri) ; => \"http://admin:password@foo.com\"
 ```
 ")
-  ; N.B. `opaque?` is precomputed as a `Bool` and captured by the scheme lambda
-  ; below; capturing the managed `opaque` field directly and then consuming it
-  ; with `(from … @"")` would free the same string twice.
   (defn str [u]
     (let [s @(scheme u)
-          opaque? (just? (opaque u))
+          authority? (or (just? (host u)) (or (just? (user u)) (just? (port u))))
           usr @(user u)
           q @(query u)
           h @(host u)
           p @(port u)
-          pth @(path u)
+          pth (from @(path u) @"")
+          ; paths are parsed without their leading slash
+          slash? (and (just? (path u)) (not (starts-with? &pth "/")))
           f @(fragment u)]
       (concat
-        &[(from (apply s &(fn [s] (concat &[s @":" @(if opaque? "" "//")]))) @"")
+        &[(from (apply s &(fn [s] (concat &[s @":"]))) @"")
           (from @(opaque u) @"")
+          @(if authority? "//" "")
           (from (apply usr &(fn [usr] (concat &[(userinfo u) @"@"]))) @"")
           (from h @"")
           (from
             (apply p
                    &(fn [p] (if (default-port? u) @"" (concat &[@":" (str p)]))))
             @"")
-          ; opaque URIs (e.g. `mailto:a@b`) have no hierarchical part, so the
-          ; authority/path separator is suppressed for them.
-          @(if opaque? "" "/")
-          (from pth @"")
+          @(if slash? "/" "")
+          pth
           (from (apply q &(fn [q] (concat &[@"?" q]))) @"")
           (from (apply f &(fn [f] (concat &[@"#" f]))) @"")])))
 

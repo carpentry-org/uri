@@ -222,15 +222,15 @@
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:/x")))
         "an empty port is dropped together with its colon")
       (assert-equal test
-        "http://a.com/"
+        "http://a.com"
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:")))
         "an empty port at the end of the input is dropped together with its colon")
       (assert-equal test
-        "http://a.com/?q=1"
+        "http://a.com?q=1"
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:?q=1")))
         "an empty port before a query is dropped together with its colon")
       (assert-equal test
-        "http://a.com/#f"
+        "http://a.com#f"
         &(URI.str &(unsafe-from-success (URI.parse "http://a.com:#f")))
         "an empty port before a fragment is dropped together with its colon")
       (assert-equal test
@@ -243,17 +243,17 @@
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:/x"))))
         "an empty port is gone after normalization")
       (assert-equal test
-        "http://a.com/?q=1"
+        "http://a.com?q=1"
         &(URI.str
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:?q=1"))))
         "an empty port before a query is gone after normalization")
       (assert-equal test
-        "http://a.com/#f"
+        "http://a.com#f"
         &(URI.str
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:#f"))))
         "an empty port before a fragment is gone after normalization")
       (assert-equal test
-        "http://a.com/"
+        "http://a.com"
         &(URI.str
           &(normalize &(unsafe-from-success (URI.parse "http://a.com:"))))
         "an empty port at the end of the input is gone after normalization")
@@ -465,6 +465,61 @@
           uri
           s
           "we can convert our representation to a string again correctly")))))
+
+(defn round-trip [s] (str &(unsafe-from-success (URI.parse s))))
+
+(defn test-round-trip []
+  (do
+    (IO.println "## Round-tripping")
+    (with-test test
+      (assert-equal test
+        "//a.com/x"
+        &(round-trip "//a.com/x")
+        "a network-path reference keeps its leading //")
+      (assert-equal test
+        &(Just @"a.com")
+        (host &(unsafe-from-success (URI.parse &(round-trip "//a.com/x"))))
+        "the host of a network-path reference is still a host after a round-trip")
+      (assert-equal test
+        "//usr:pass@a.com/x"
+        &(round-trip "//usr:pass@a.com/x")
+        "a network-path reference with userinfo round-trips")
+      (assert-equal test
+        "//a.com:8080/x"
+        &(round-trip "//a.com:8080/x")
+        "a network-path reference with a port round-trips")
+      (assert-equal test
+        "//a.com/x?q=1#f"
+        &(round-trip "//a.com/x?q=1#f")
+        "a network-path reference with a query and a fragment round-trips")
+      (assert-equal test
+        "http://a.com/x"
+        &(round-trip "http://a.com/x")
+        "a URI with a scheme and an authority round-trips")
+      (assert-equal test
+        "http:/foo"
+        &(round-trip "http:/foo")
+        "a scheme without an authority gains neither // nor a second slash")
+      (assert-equal test
+        "?q=1"
+        &(round-trip "?q=1")
+        "a query-only reference gains no path")
+      (assert-equal test
+        "#f"
+        &(round-trip "#f")
+        "a fragment-only reference gains no path")
+      (assert-equal test
+        "//"
+        &(round-trip "//")
+        "an empty authority stays an authority instead of becoming a path")
+      (assert-equal test
+        "//a.com"
+        &(round-trip "//a.com")
+        "an authority with no path gains no trailing slash")
+      (assert-equal test
+        "http://a.com"
+        &(round-trip "http://a.com")
+        "a scheme and an authority with no path gain no trailing slash"))))
 
 (defn fp [s] (full-path &(unsafe-from-success (URI.parse s))))
 
@@ -772,6 +827,7 @@
       (test-query-string-from-map)
       (test-query-multimap)
       (test-stringification)
+      (test-round-trip)
       (test-full-path)
       (test-remove-dot-segments)
       (test-resolve)
