@@ -148,8 +148,7 @@ string.
           p @(port u)
           pth (from @(path u) @"")
           ; paths are parsed without their leading slash
-          slash? (and (or authority? (just? (path u)))
-                      (not (starts-with? &pth "/")))
+          slash? (and (just? (path u)) (not (starts-with? &pth "/")))
           f @(fragment u)]
       (concat
         &[(from (apply s &(fn [s] (concat &[s @":"]))) @"")

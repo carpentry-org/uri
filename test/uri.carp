@@ -386,7 +386,19 @@
       (assert-equal test
         "#f"
         &(round-trip "#f")
-        "a fragment-only reference gains no path"))))
+        "a fragment-only reference gains no path")
+      (assert-equal test
+        "//"
+        &(round-trip "//")
+        "an empty authority stays an authority instead of becoming a path")
+      (assert-equal test
+        "//a.com"
+        &(round-trip "//a.com")
+        "an authority with no path gains no trailing slash")
+      (assert-equal test
+        "http://a.com"
+        &(round-trip "http://a.com")
+        "a scheme and an authority with no path gain no trailing slash"))))
 
 (defn fp [s] (full-path &(unsafe-from-success (URI.parse s))))
 
