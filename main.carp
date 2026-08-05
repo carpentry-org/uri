@@ -390,6 +390,10 @@ This is the inverse of `query-map-from-str`.")
   (defn from [p frm] (slice (source p) frm @(offset p)))
   (defn to [p t] (slice (source p) @(offset p) t))
 
+  ; f is taken by value: a borrowed closure's deleter is emitted after `break`
+  (defn map-uri [res f]
+    (match res (Result.Error e) (Error e) (Result.Success u) (Success (f u))))
+
   (defn parse-authority [p res] res)
   (defn parse-path [p res] res)
 
@@ -401,7 +405,8 @@ This is the inverse of `query-map-from-str`.")
         (if (end? &p)
           (do
             (set! res
-                  (map res &(fn [res] (set-fragment res (Just (from pref st))))))
+                  (map-uri res
+                           (fn [res] (set-fragment res (Just (from pref st))))))
             (break))
           (set! p (adv &p))))
       res))
@@ -415,15 +420,17 @@ This is the inverse of `query-map-from-str`.")
           (end? &p)
             (do
               (set! res
-                    (map res &(fn [res] (set-query res (Just (from pref st))))))
+                    (map-uri res
+                             (fn [res] (set-query res (Just (from pref st))))))
               (break))
           (= (c &p) \#)
             (do
               (set! res
                     (parse-fragment @pref
-                                    (map res
-                                         &(fn [res]
-                                           (set-query res (Just (from pref st)))))))
+                                    (map-uri res
+                                             (fn [res]
+                                               (set-query res
+                                                          (Just (from pref st)))))))
               (break))
           (set! p (adv &p))))
       res))
@@ -434,25 +441,27 @@ This is the inverse of `query-map-from-str`.")
       (while true
         (if (end? &p)
           (do
-            (set! res (map res &(fn [res] (set-path res (Just (from pref st))))))
+            (set! res
+                  (map-uri res (fn [res] (set-path res (Just (from pref st))))))
             (break))
           (case (c &p)
                 \?
                 (do
                   (set! res
                         (parse-query @&p
-                                     (map res
-                                          &(fn [res]
-                                            (set-path res (Just (from pref st)))))))
+                                     (map-uri res
+                                              (fn [res]
+                                                (set-path res
+                                                          (Just (from pref st)))))))
                   (break))
                 \#
                 (do
                   (set! res
                         (parse-fragment @&p
-                                        (map res
-                                             &(fn [res]
-                                               (set-path res
-                                                         (Just (from pref st)))))))
+                                        (map-uri res
+                                                 (fn [res]
+                                                   (set-path res
+                                                             (Just (from pref st)))))))
                   (break))
                 (set! p (adv &p)))))
       res))
@@ -534,15 +543,16 @@ This is the inverse of `query-map-from-str`.")
             (end? &p)
               (do
                 (set! res
-                      (map res &(fn [res] (set-host res (Just (from pref st))))))
+                      (map-uri res
+                               (fn [res] (set-host res (Just (from pref st))))))
                 (break))
             (and (= (c &p) \:) (not bracket-flag))
               (do
                 (set! res
                       (parse-port (adv &p)
-                                  (map res
-                                       &(fn [res]
-                                         (set-host res (Just (from pref st)))))))
+                                  (map-uri res
+                                           (fn [res]
+                                             (set-host res (Just (from pref st)))))))
                 (break))
             (end-of-host? &p)
               (do
@@ -551,9 +561,9 @@ This is the inverse of `query-map-from-str`.")
                 ; consume their own delimiter), mirroring `parse-relative`;
                 ; routing them all to `parse-path` swallowed the query/fragment.
                 (set! res
-                      (let [r (map res
-                                   &(fn [res]
-                                     (set-host res (Just (from pref st)))))]
+                      (let [r (map-uri res
+                                       (fn [res]
+                                         (set-host res (Just (from pref st)))))]
                         (case (c &p)
                               \?
                               (parse-query @&p r)
@@ -577,16 +587,17 @@ This is the inverse of `query-map-from-str`.")
             (do
               (set! res
                     (parse-host (adv &p)
-                                (map res
-                                     &(fn [res]
-                                       (if pw-flag
-                                         (set-password res (Just (from pref st)))
-                                         (set-user res (Just (from pref st))))))))
+                                (map-uri res
+                                         (fn [res]
+                                           (if pw-flag
+                                             (set-password res
+                                                           (Just (from pref st)))
+                                             (set-user res (Just (from pref st))))))))
               (break))
           (= (c &p) \:)
             (do
               (set! res
-                    (map res &(fn [res] (set-user res (Just (from pref st))))))
+                    (map-uri res (fn [res] (set-user res (Just (from pref st))))))
               (set! pw-flag true)
               (set! p (adv &p))
               (set! st @(offset &p)))
@@ -622,7 +633,8 @@ This is the inverse of `query-map-from-str`.")
           (= (c &p) \:)
             (do
               (set! res
-                    (map res &(fn [res] (set-scheme res (Just (from pref st))))))
+                    (map-uri res
+                             (fn [res] (set-scheme res (Just (from pref st))))))
               (if (= (nxt &p) \/)
                 (do
                   (set! res
@@ -632,13 +644,13 @@ This is the inverse of `query-map-from-str`.")
                   (break))
                 (do
                   (set! res
-                        (map res
-                             &(fn [res]
-                               (set-opaque res
-                                           (Just
-                                             (slice (source pref)
-                                                    (inc @(offset pref))
-                                                    (length (source pref))))))))
+                        (map-uri res
+                                 (fn [res]
+                                   (set-opaque res
+                                               (Just
+                                                 (slice (source pref)
+                                                        (inc @(offset pref))
+                                                        (length (source pref))))))))
                   (break))))
           (do (set! res (parse-no-scheme (set-offset @&p 0) res)) (break))))
       res))
