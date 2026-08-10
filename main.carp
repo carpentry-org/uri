@@ -505,11 +505,14 @@ This is the inverse of `query-map-from-str`.")
   (defn parse-port [p res]
     (let-do [st @(offset &p)
              pref &p]
+      ; `break` jumps over its own block’s cleanup, so bind strings before it.
       (while true
         (cond
           (end? &p)
             (do
-              (set! res (set-parsed-port res &(from pref st) @(offset &p)))
+              (set! res
+                    (let [digits (from pref st)]
+                      (set-parsed-port res &digits @(offset &p))))
               (break))
           (num? &p) (set! p (adv &p))
           (end-of-host? &p)
@@ -527,8 +530,9 @@ This is the inverse of `query-map-from-str`.")
               (break))
           (do
             (set! res
-                  (Error
-                    (fmt "Invalid URI: bad port at character %d" @(offset &p))))
+                  (let [msg (fmt "Invalid URI: bad port at character %d"
+                                 @(offset &p))]
+                    (Error msg)))
             (break))))
       res))
 
