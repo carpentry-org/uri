@@ -9,9 +9,9 @@
    fragment (Maybe String)
    opaque (Maybe String)])
 
-(use-all Array Int Maybe Result)
-
 (defmodule URI
+  (use-all Int Maybe Result)
+
   (doc zero "Creates an empty URI, i.e. one that has only `Nothing` in it.")
   (implements zero zero)
   (defn zero []
@@ -277,7 +277,7 @@ skipped. The result is wrapped in a `Result` for API compatibility.")
   (defn query-map-from-str [s]
     (if (= s "")
       (Success {})
-      (reduce
+      (Array.reduce
         &(fn [a x]
           (match a
             (Error err) (Error err)
@@ -321,7 +321,7 @@ compatibility.")
   (defn query-multimap-from-str [s]
     (if (= s "")
       (Success {})
-      (reduce
+      (Array.reduce
         &(fn [a x]
           (match a
             (Error err) (Error err)
@@ -670,7 +670,8 @@ This is the inverse of `query-map-from-str`.")
 (defmodule URI
   (private pop-last)
   (hidden pop-last)
-  (defn pop-last [output] (unless (empty? output) (ignore (pop-back! output))))
+  (defn pop-last [output]
+    (unless (Array.empty? output) (ignore (Array.pop-back! output))))
 
   (doc remove-dot-segments "normalizes a path by resolving `.` and `..` segments
 following RFC 3986 section 5.2.4.
@@ -702,7 +703,7 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
             (set! i (+ i 2))
             ; a trailing "/." contributes a lone "/"
             (and (= rem 2) (= c0 \/) (= (char-at path (+ i 1)) \.))
-            (do (push-back! &output @"/") (set! i n))
+            (do (Array.push-back! &output @"/") (set! i n))
             ; C: "/../" — collapse to "/" and pop the last output segment
             (and (>= rem 4)
                  (= c0 \/)
@@ -715,7 +716,7 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
                  (= c0 \/)
                  (= (char-at path (+ i 1)) \.)
                  (= (char-at path (+ i 2)) \.))
-            (do (pop-last &output) (push-back! &output @"/") (set! i n))
+            (do (pop-last &output) (Array.push-back! &output @"/") (set! i n))
             ; D: a bare "." or ".." — drop
             (or (and (= rem 1) (= c0 \.))
                 (and (= rem 2) (= c0 \.) (= (char-at path (+ i 1)) \.)))
@@ -724,7 +725,7 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
             (let-do [start (if (= c0 \/) (+ i 1) i)
                      j start]
               (while (and (< j n) (/= (char-at path j) \/)) (set! j (inc j)))
-              (push-back! &output (byte-slice path i j))
+              (Array.push-back! &output (byte-slice path i j))
               (set! i j)))))
       (concat &output)))
 
