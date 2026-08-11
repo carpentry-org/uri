@@ -763,6 +763,15 @@
               (URI.parse "http://User@example.com/~joe/index.html"))))
         "equivalent URIs written differently normalize to the same value"))))
 
+(defn test-no-use-leak []
+  (do
+    (IO.println "## Use leaks")
+    (with-test test
+      (assert-equal test
+        "hel"
+        &(prefix "hello" 3)
+        "loading uri leaves bare String.prefix unambiguous"))))
+
 (defn test-remove-dot-segments []
   (do
     (IO.println "## Remove dot segments (RFC 3986 Section 5.2.4)")
@@ -830,6 +839,7 @@
       (test-round-trip)
       (test-full-path)
       (test-remove-dot-segments)
+      (test-no-use-leak)
       (test-resolve)
       (test-opaque)
       (test-normalize)]))
