@@ -32,7 +32,7 @@
                 <div class="module-description">
                     <p>is a <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.4.0&quot;)
+<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.5.0&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -300,8 +300,8 @@ yields <code>/</code>.</p>
                     <p class="doc">
                         <p>returns the host part of a URI <code>u</code>, unwrapping brackets for
 IPv6 addresses.</p>
-<pre><code>(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;)) ; =&gt; ::1
-(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;)) ; =&gt; [::1]
+<pre><code>(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;))   ; =&gt; ::1
+(URI.hostname &amp;(URI.parse &quot;http://foo.com/bar&quot;)) ; =&gt; foo.com
 </code></pre>
 
                     </p>

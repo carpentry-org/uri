@@ -32,7 +32,7 @@
                 <div class="module-description">
                     <p>is a <code>URI</code> datatype and parser for Carp.</p>
 <h2>Installation</h2>
-<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.4.0&quot;)
+<pre><code class="language-clojure">(load &quot;git@github.com:carpentry-org/uri@0.5.0&quot;)
 </code></pre>
 <h2>Usage</h2>
 <p>To get started, you’ll most probably want to parse a <code>URI</code> from a string. To do
@@ -300,8 +300,8 @@ yields <code>/</code>.</p>
                     <p class="doc">
                         <p>returns the host part of a URI <code>u</code>, unwrapping brackets for
 IPv6 addresses.</p>
-<pre><code>(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;)) ; =&gt; ::1
-(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;)) ; =&gt; [::1]
+<pre><code>(URI.hostname &amp;(URI.parse &quot;http://[::1]/bar&quot;))   ; =&gt; ::1
+(URI.hostname &amp;(URI.parse &quot;http://foo.com/bar&quot;)) ; =&gt; foo.com
 </code></pre>
 
                     </p>
@@ -560,6 +560,57 @@ skipped. The result is wrapped in a <code>Result</code> for API compatibility.</
                     </p>
                 </div>
                 <div class="binder">
+                    <a class="anchor" href="#query-multimap">
+                        <h3 id="query-multimap">
+                            query-multimap
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a)] (Result (Map String (Array String)) String))
+                    </p>
+                    <pre class="args">
+                        (query-multimap u)
+                    </pre>
+                    <p class="doc">
+                        <p>parses the querystring, collecting every value for a key
+into an <code>Array</code> in encounter order, and returns the result, percent-decoding
+keys and values.</p>
+<p>This mirrors <code>query-map</code> but preserves repeated keys; see
+<code>query-multimap-from-str</code> for the exact edge-case semantics.</p>
+
+                    </p>
+                </div>
+                <div class="binder">
+                    <a class="anchor" href="#query-multimap-from-str">
+                        <h3 id="query-multimap-from-str">
+                            query-multimap-from-str
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref String a)] (Result (Map String (Array String)) String))
+                    </p>
+                    <pre class="args">
+                        (query-multimap-from-str s)
+                    </pre>
+                    <p class="doc">
+                        <p>parses the querystring, collecting every value
+for a key into an <code>Array</code> in encounter order, and returns the result,
+percent-decoding keys and values.</p>
+<p>Unlike <code>query-map-from-str</code>, repeated keys such as <code>a</code> in <code>a=1&amp;a=2</code> are all kept
+instead of overwritten. A parameter without a value, such as <code>flag</code> in <code>?flag</code>,
+contributes a single empty-string value. Empty segments, such as a trailing or
+doubled <code>&amp;</code>, are skipped. The result is wrapped in a <code>Result</code> for API
+compatibility.</p>
+
+                    </p>
+                </div>
+                <div class="binder">
                     <a class="anchor" href="#query-string-from-map">
                         <h3 id="query-string-from-map">
                             query-string-from-map
@@ -578,6 +629,28 @@ skipped. The result is wrapped in a <code>Result</code> for API compatibility.</
                         <p>converts a <code>Map</code> of query parameters back into a
 querystring, percent-encoding keys and values.</p>
 <p>This is the inverse of <code>query-map-from-str</code>.</p>
+
+                    </p>
+                </div>
+                <div class="binder">
+                    <a class="anchor" href="#query-values">
+                        <h3 id="query-values">
+                            query-values
+                        </h3>
+                    </a>
+                    <div class="description">
+                        defn
+                    </div>
+                    <p class="sig">
+                        (Fn [(Ref URI a), (Ref String b)] (Array String))
+                    </p>
+                    <pre class="args">
+                        (query-values u k)
+                    </pre>
+                    <p class="doc">
+                        <p>returns every value supplied for the query parameter <code>k</code> in
+URI <code>u</code>, in encounter order and percent-decoded. A key that is absent yields an
+empty <code>Array</code>.</p>
 
                     </p>
                 </div>
@@ -619,6 +692,9 @@ querystring, percent-encoding keys and values.</p>
                     <p class="doc">
                         <p>normalizes a path by resolving <code>.</code> and <code>..</code> segments
 following RFC 3986 section 5.2.4.</p>
+<p>Runs in a single linear pass: a byte cursor walks the input once and output
+segments are collected on a stack, so an <code>n</code>-segment path costs <code>O(n)</code> instead
+of the quadratic slicing a literal transcription of the RFC would incur.</p>
 
                     </p>
                 </div>
