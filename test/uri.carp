@@ -994,7 +994,27 @@
       (assert-equal test
         &(Just @"a/b")
         (path &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
-        "dot segments are still removed under a continuation-byte host"))))
+        "dot segments are still removed under a continuation-byte host")
+      (assert-equal test
+        &(Just (conts))
+        (host &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
+        "normalizing keeps a continuation-byte host")
+      (assert-equal test
+        &(Just (fmt "%s/b" &(conts)))
+        (path &(normalize &(parsed &(fmt "http://a.com/%s/./b" &(conts)))))
+        "normalizing keeps a continuation-byte path segment")
+      (assert-equal test
+        &(Just (conts))
+        (query &(normalize &(parsed &(fmt "http://a.com/x?%s" &(conts)))))
+        "normalizing keeps a continuation-byte query")
+      (assert-equal test
+        &(Just (fmt "a%sb.com" &(conts)))
+        (host &(normalize &(parsed &(fmt "http://A%sB.com/x" &(conts)))))
+        "ASCII around continuation bytes is still lower-cased")
+      (assert-equal test
+        &(fmt "http://%s/a/b" &(conts))
+        &(str &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
+        "a normalized continuation-byte URI stringifies with its host intact"))))
 
 (defn main []
   (Array.sum

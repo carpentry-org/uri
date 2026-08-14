@@ -396,7 +396,6 @@ This is the inverse of `query-map-from-str`.")
   (defn adv [p] (update-offset @p &inc))
   (defn bck [p] (update-offset @p &dec))
   (defn from [p frm] (byte-slice (source p) frm @(offset p)))
-  (defn to [p t] (byte-slice (source p) @(offset p) t))
 
   ; f is taken by value: a borrowed closure's deleter is emitted after `break`
   (defn map-uri [res f]
@@ -831,30 +830,25 @@ error if the reference string cannot be parsed.
                       (Nothing)))))))))
 
 (defmodule URI
-  (private hex-digit?)
-  (hidden hex-digit?)
-  (defn hex-digit? [c]
-    (or (and (>= c \0) (<= c \9))
-        (and (>= c \a) (<= c \f))
-        (and (>= c \A) (<= c \F))))
+  (private lower-byte)
+  (hidden lower-byte)
+  (defn lower-byte [b]
+    (if (Char.upper-case? (from-int (Byte.to-int b))) (+ b 32b) b))
 
-  (private lower-char)
-  (hidden lower-char)
-  (defn lower-char [c] (if (Char.upper-case? c) (from-int (+ (to-int c) 32)) c))
-
-  (private upper-hex)
-  (hidden upper-hex)
-  (defn upper-hex [c]
-    (if (and (>= c \a) (<= c \f)) (from-int (- (to-int c) 32)) c))
+  (private upper-hex-byte)
+  (hidden upper-hex-byte)
+  (defn upper-hex-byte [b]
+    (let [c (from-int (Byte.to-int b))]
+      (if (and (>= c \a) (<= c \f)) (- b 32b) b)))
 
   (private lower-str)
   (hidden lower-str)
   (defn lower-str [s]
-    (let-do [cs (chars s)
+    (let-do [bs (String.to-bytes s)
              a []]
-      (for [i 0 (Array.length &cs)]
-        (Array.push-back! &a (lower-char @(Array.unsafe-nth &cs i))))
-      (from-chars &a)))
+      (for [i 0 (Array.length &bs)]
+        (Array.push-back! &a (lower-byte @(Array.unsafe-nth &bs i))))
+      (String.from-bytes &a)))
 
   (doc normalize-pct "normalizes the percent-encoding in `s` per RFC 3986
 section 6.2.2: percent-encoded octets of unreserved characters are decoded to
@@ -864,32 +858,33 @@ letters) are lower-cased, as required for the host component.")
   (private normalize-pct)
   (hidden normalize-pct)
   (defn normalize-pct [s lower?]
-    (let-do [cs (chars s)
-             n (Array.length &cs)
+    (let-do [bs (String.to-bytes s)
+             n (Array.length &bs)
              a []
              i 0]
       (while (< i n)
-        (let [c @(Array.unsafe-nth &cs i)]
-          (if (and (= c \%)
+        (let [b @(Array.unsafe-nth &bs i)]
+          (if (and (= b 37b)
                    (< (+ i 2) n)
-                   (hex-digit? @(Array.unsafe-nth &cs (inc i)))
-                   (hex-digit? @(Array.unsafe-nth &cs (+ i 2))))
-            (let-do [hi @(Array.unsafe-nth &cs (inc i))
-                     lo @(Array.unsafe-nth &cs (+ i 2))
-                     b (bit-or (bit-shift-left (decode-nibble hi) 4)
-                               (decode-nibble lo))
-                     dc (from-int b)]
-              (if (unreserved? dc)
-                (Array.push-back! &a (if lower? (lower-char dc) dc))
+                   (hex-byte? &bs (inc i))
+                   (hex-byte? &bs (+ i 2)))
+            (let-do [hi @(Array.unsafe-nth &bs (inc i))
+                     lo @(Array.unsafe-nth &bs (+ i 2))
+                     d (Byte.from-int
+                       (bit-or
+                         (bit-shift-left (nibble-at &bs (inc i)) 4)
+                         (nibble-at &bs (+ i 2))))]
+              (if (unreserved? (from-int (Byte.to-int d)))
+                (Array.push-back! &a (if lower? (lower-byte d) d))
                 (do
-                  (Array.push-back! &a \%)
-                  (Array.push-back! &a (upper-hex hi))
-                  (Array.push-back! &a (upper-hex lo))))
+                  (Array.push-back! &a b)
+                  (Array.push-back! &a (upper-hex-byte hi))
+                  (Array.push-back! &a (upper-hex-byte lo))))
               (set! i (+ i 3)))
             (do
-              (Array.push-back! &a (if lower? (lower-char c) c))
+              (Array.push-back! &a (if lower? (lower-byte b) b))
               (set! i (inc i))))))
-      (from-chars &a)))
+      (String.from-bytes &a)))
 
   (private normalized-port)
   (hidden normalized-port)
