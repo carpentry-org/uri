@@ -82,6 +82,11 @@ port for its `scheme`.")
   (defn default-port? [u]
     (from (apply @(port u) &(fn [p] (= p (default-port @(scheme u))))) false))
 
+  (private starts-with-byte?)
+  (hidden starts-with-byte?)
+  (defn starts-with-byte? [s c]
+    (and (not (String.empty? s)) (= (char-at s 0) c)))
+
   (doc hostname "returns the host part of a URI `u`, unwrapping brackets for
 IPv6 addresses.
 
@@ -93,9 +98,12 @@ IPv6 addresses.
   (defn hostname [u]
     (apply @(host u)
            &(fn [h]
-             (if (and (starts-with? &h "[") (ends-with? &h "]"))
-               (slice &h 1 (Int.dec (length &h)))
-               h))))
+             (let [n (length &h)]
+               (if (and (> n 1)
+                        (= (char-at &h 0) \[)
+                        (= (char-at &h (Int.dec n)) \]))
+                 (byte-slice &h 1 (Int.dec n))
+                 h)))))
 
   (doc full-path "returns the full path of a URI `u`, i.e. the origin-form
 request target: the path followed by `?` and the query when one is present.
@@ -148,7 +156,7 @@ string.
           p @(port u)
           pth (from @(path u) @"")
           ; paths are parsed without their leading slash
-          slash? (and (just? (path u)) (not (starts-with? &pth "/")))
+          slash? (and (just? (path u)) (not (starts-with-byte? &pth \/)))
           f @(fragment u)]
       (concat
         &[(from (apply s &(fn [s] (concat &[s @":"]))) @"")
@@ -289,8 +297,8 @@ skipped. The result is wrapped in a `Result` for API compatibility.")
                     (let [k (unescape x)
                           v @""] (Success (Map.put m &k &v))))
                 (Just i)
-                  (let [k (unescape &(slice x 0 i))
-                        v (unescape &(slice x (inc i) (length x)))]
+                  (let [k (unescape &(byte-slice x 0 i))
+                        v (unescape &(byte-slice x (inc i) (length x)))]
                     (Success (Map.put m &k &v))))))
         (the (Result (Map String String) String) (Success {}))
         &(split-by s &[\&]))))
@@ -334,8 +342,8 @@ compatibility.")
                 (Just i)
                   (Success
                     (multimap-append m
-                                     (unescape &(slice x 0 i))
-                                     (unescape &(slice x (inc i) (length x))))))))
+                                     (unescape &(byte-slice x 0 i))
+                                     (unescape &(byte-slice x (inc i) (length x))))))))
         (the (Result (Map String (Array String)) String) (Success {}))
         &(split-by s &[\&]))))
 
@@ -387,8 +395,8 @@ This is the inverse of `query-map-from-str`.")
   (defn end-of-host? [p] (or (= (c p) \/) (= (c p) \?) (= (c p) \#)))
   (defn adv [p] (update-offset @p &inc))
   (defn bck [p] (update-offset @p &dec))
-  (defn from [p frm] (slice (source p) frm @(offset p)))
-  (defn to [p t] (slice (source p) @(offset p) t))
+  (defn from [p frm] (byte-slice (source p) frm @(offset p)))
+  (defn to [p t] (byte-slice (source p) @(offset p) t))
 
   ; f is taken by value: a borrowed closure's deleter is emitted after `break`
   (defn map-uri [res f]
@@ -486,9 +494,10 @@ This is the inverse of `query-map-from-str`.")
 
   (defn significant-digits [digits]
     (let-do [i 0
-             stop (dec (length digits))]
+             n (length digits)
+             stop (dec n)]
       (while (and (< i stop) (= (char-at digits i) \0)) (set! i (inc i)))
-      (suffix digits i)))
+      (byte-slice digits i n)))
 
   (defn set-parsed-port [res digits off]
     (match res
@@ -652,9 +661,9 @@ This is the inverse of `query-map-from-str`.")
                                  (fn [res]
                                    (set-opaque res
                                                (Just
-                                                 (slice (source pref)
-                                                        (inc @(offset pref))
-                                                        (length (source pref))))))))
+                                                 (byte-slice (source pref)
+                                                             (inc @(offset pref))
+                                                             (length (source pref))))))))
                   (break))))
           (do (set! res (parse-no-scheme (set-offset @&p 0) res)) (break))))
       res))
@@ -738,9 +747,7 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
     (let [full (concat &[@"/" @stored-path])
           cleaned (remove-dot-segments &full)
           clen (length &cleaned)]
-      (if (and (> clen 0) (starts-with? &cleaned "/"))
-        (slice &cleaned 1 clen)
-        cleaned)))
+      (if (starts-with-byte? &cleaned \/) (byte-slice &cleaned 1 clen) cleaned)))
 
   (private merge-paths)
   (hidden merge-paths)
@@ -751,7 +758,7 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
                last-slash 0]
         (for [i 0 (length &base-path)]
           (when (= (char-at &base-path i) \/) (set! last-slash i)))
-        (concat &[(slice &base-path 0 (inc last-slash)) @ref-path]))))
+        (concat &[(byte-slice &base-path 0 (inc last-slash)) @ref-path]))))
 
   (doc resolve "resolves a URI reference string `ref-str` against a base URI
 `base`, following RFC 3986 section 5. Returns the resolved absolute URI, or an
@@ -769,7 +776,7 @@ error if the reference string cannot be parsed.
     (match (URI.parse ref-str)
       (Error e) (Error e)
       (Success r)
-        (let [ref-path-abs (starts-with? ref-str "/")]
+        (let [ref-path-abs (starts-with-byte? ref-str \/)]
           (Success
             (cond
               (just? (scheme &r))
@@ -810,8 +817,8 @@ error if the reference string cannot be parsed.
                       (let [merged (merge-paths base &r-path)
                             cleaned (remove-dot-segments &merged)
                             clen (length &cleaned)]
-                        (if (and (> clen 0) (starts-with? &cleaned "/"))
-                          (slice &cleaned 1 clen)
+                        (if (starts-with-byte? &cleaned \/)
+                          (byte-slice &cleaned 1 clen)
                           cleaned)))]
                 (init @(scheme base)
                       @(host base)

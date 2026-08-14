@@ -828,6 +828,174 @@
         &(URI.remove-dot-segments "/a/./b/./c/./d/./e/../../../../f")
         "a long run of . and .. segments collapses correctly"))))
 
+(defn parsed [s] (unsafe-from-success (URI.parse s)))
+
+; a run of UTF-8 continuation bytes: nonzero strlen, zero decoded characters
+(defn conts [] (String.from-bytes &[128b 128b 128b]))
+
+(defn test-non-ascii []
+  (do
+    (IO.println "## Non-ASCII input")
+    (with-test test
+      (assert-equal test
+        &(Just @"café")
+        (path &(parsed "http://example.com/café?q=1#f"))
+        "a non-ASCII path is extracted whole")
+      (assert-equal test
+        &(Just @"q=1")
+        (query &(parsed "http://example.com/café?q=1#f"))
+        "a query following a non-ASCII path is extracted whole")
+      (assert-equal test
+        &(Just @"f")
+        (fragment &(parsed "http://example.com/café?q=1#f"))
+        "a fragment following a non-ASCII path is extracted whole")
+      (assert-equal test
+        &(Just @"exämple.com")
+        (host &(parsed "http://exämple.com/x"))
+        "a non-ASCII host is extracted whole")
+      (assert-equal test
+        &(Just @"usér")
+        (user &(parsed "http://usér:päss@example.com/p"))
+        "a non-ASCII user is extracted whole")
+      (assert-equal test
+        &(Just @"päss")
+        (password &(parsed "http://usér:päss@example.com/p"))
+        "a non-ASCII password is extracted whole")
+      (assert-equal test
+        &(Just @"q=süß")
+        (query &(parsed "http://a.com/x?q=süß#frägment"))
+        "a non-ASCII query is extracted whole")
+      (assert-equal test
+        &(Just @"frägment")
+        (fragment &(parsed "http://a.com/x?q=süß#frägment"))
+        "a non-ASCII fragment is extracted whole")
+      (assert-equal test
+        &(Just @"café@example.com")
+        (opaque &(parsed "mailto:café@example.com"))
+        "a non-ASCII opaque part is extracted whole")
+      (assert-equal test
+        &(Just 8080)
+        (port &(parsed "http://exämple.com:8080/café"))
+        "a port after a non-ASCII host is parsed")
+      (assert-equal test
+        &(Just @"::1")
+        &(hostname &(parsed "http://[::1]/café"))
+        "brackets are unwrapped when the path is non-ASCII")
+      (assert-equal test
+        &(Just @"exämple.com")
+        &(hostname &(parsed "http://exämple.com/x"))
+        "a non-ASCII host without brackets is returned as is")
+      (assert-equal test
+        &(Just @"exämple")
+        &(hostname &(parsed "http://[exämple]/x"))
+        "brackets around a non-ASCII host are unwrapped")
+      (assert-equal test
+        "http://example.com/café?q=1#f"
+        &(round-trip "http://example.com/café?q=1#f")
+        "a URI with a non-ASCII path round-trips")
+      (assert-equal test
+        "http://usér:päss@exämple.com:8080/café?q=süß#frägment"
+        &(round-trip
+          "http://usér:päss@exämple.com:8080/café?q=süß#frägment")
+        "a URI that is non-ASCII in every component round-trips")
+      (assert-equal test
+        "http://a/b/c/café"
+        &(resolved-str "café")
+        "a non-ASCII relative reference resolves")
+      (assert-equal test
+        "http://a/x"
+        &(resolved-str "/café/../x")
+        "a non-ASCII absolute reference resolves")
+      (assert-equal test
+        "http://a/bä/c/g"
+        &(str
+          &(unsafe-from-success (URI.resolve &(parsed "http://a/bä/c/d") "g")))
+        "a reference merges onto a non-ASCII base path")
+      (assert-equal test
+        "http://exämple.com/café/x"
+        &(normalized-str "HTTP://Exämple.COM:80/café/./x")
+        "a non-ASCII URI normalizes")
+      (assert-equal test
+        "http://a.com/caf%C3%A9"
+        &(normalized-str "http://a.com/caf%c3%a9")
+        "percent-encoded non-ASCII octets keep their encoding when normalized")
+      (assert-equal test
+        &(Just @"süß")
+        &(Map.get-maybe
+          &(unsafe-from-success (query-map-from-str "café=süß&x=1"))
+          "café")
+        "a non-ASCII query parameter is split on the first =")
+      (assert-equal test
+        &(Just @"süß")
+        &(Map.get-maybe
+          &(unsafe-from-success (query-map-from-str "caf%C3%A9=s%C3%BC%C3%9F"))
+          "café")
+        "a percent-encoded non-ASCII query parameter decodes")
+      (assert-true test
+        (= &{@"café" [@"1" @"2"]} &(multimap-of "café=1&café=2"))
+        "a repeated non-ASCII key keeps every value")
+      (assert-true test
+        (error? &(URI.parse "http://exämple.com:12ä/x"))
+        "a non-ASCII byte in the port is an error, not a crash"))))
+
+(defn test-continuation-bytes []
+  (do
+    (IO.println "## Bytes that decode to no characters")
+    (with-test test
+      (assert-equal test
+        &(Just (conts))
+        (path &(parsed &(conts)))
+        "a path of pure continuation bytes parses")
+      (assert-equal test
+        &(Just (conts))
+        (host &(parsed &(fmt "http://%s/x" &(conts))))
+        "a host of pure continuation bytes parses")
+      (assert-equal test
+        &(Just @"x")
+        (path &(parsed &(fmt "http://%s/x" &(conts))))
+        "a path after a continuation-byte host parses")
+      (assert-equal test
+        &(Just (conts))
+        &(hostname &(parsed &(fmt "http://%s/x" &(conts))))
+        "hostname of a continuation-byte host is the host")
+      (assert-equal test
+        &(Just (conts))
+        (query
+          &(parsed &(fmt "//%s/%s?%s#%s" &(conts) &(conts) &(conts) &(conts))))
+        "a query of pure continuation bytes parses")
+      (assert-equal test
+        &(Just (conts))
+        (fragment
+          &(parsed &(fmt "//%s/%s?%s#%s" &(conts) &(conts) &(conts) &(conts))))
+        "a fragment of pure continuation bytes parses")
+      (assert-equal test
+        &(fmt "//%s/%s?%s#%s" &(conts) &(conts) &(conts) &(conts))
+        &(round-trip &(fmt "//%s/%s?%s#%s" &(conts) &(conts) &(conts) &(conts)))
+        "a URI of pure continuation bytes round-trips")
+      (assert-equal test
+        &(Just (conts))
+        (opaque &(parsed &(fmt "mailto:%s" &(conts))))
+        "an opaque part of pure continuation bytes parses")
+      (assert-equal test
+        &(Just (conts))
+        &(Map.get-maybe
+          &(unsafe-from-success
+            (query-map-from-str &(fmt "%s=%s" &(conts) &(conts))))
+          &(conts))
+        "a continuation-byte query parameter is split on the =")
+      (assert-equal test
+        &(fmt "http://a/b/c/%s" &(conts))
+        &(resolved-str &(conts))
+        "a continuation-byte relative reference resolves")
+      (assert-equal test
+        &(fmt "http://a/%s" &(conts))
+        &(resolved-str &(fmt "/%s" &(conts)))
+        "a continuation-byte absolute reference resolves")
+      (assert-equal test
+        &(Just @"a/b")
+        (path &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
+        "dot segments are still removed under a continuation-byte host"))))
+
 (defn main []
   (Array.sum
     &[(test-parsing)
@@ -842,4 +1010,6 @@
       (test-no-use-leak)
       (test-resolve)
       (test-opaque)
-      (test-normalize)]))
+      (test-normalize)
+      (test-non-ascii)
+      (test-continuation-bytes)]))
