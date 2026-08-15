@@ -949,7 +949,7 @@ security checks should account for.
 ## Installation
 
 ```clojure
-(load \"git@github.com:carpentry-org/uri@0.5.0\")
+(load \"git@github.com:carpentry-org/uri@0.5.1\")
 ```
 
 ## Usage
