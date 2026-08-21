@@ -775,7 +775,7 @@
       (assert-equal test
         &(Just @"veit@veitheller.de")
         (opaque &(unsafe-from-success (URI.parse "mailto:veit@veitheller.de")))
-        "we parse the opaque part as everything after the colon")
+        "we parse the opaque part as the rootless path after the colon")
       (assert-equal test
         &(Just @"g")
         (opaque &(unsafe-from-success (URI.parse "http:g")))
@@ -963,6 +963,115 @@
 
 ; a run of UTF-8 continuation bytes: nonzero strlen, zero decoded characters
 (defn conts [] (String.from-bytes &[128b 128b 128b]))
+
+(defn test-opaque-query-fragment []
+  (do
+    (IO.println "## Queries and fragments on opaque URIs")
+    (with-test test
+      (assert-equal test
+        &(Just @"a@b.com")
+        (opaque &(parsed "mailto:a@b.com?subject=hi#x"))
+        "a query and a fragment are split off an opaque part")
+      (assert-equal test
+        &(Just @"subject=hi")
+        (query &(parsed "mailto:a@b.com?subject=hi#x"))
+        "an opaque URI’s query is parsed")
+      (assert-equal test
+        &(Just @"x")
+        (fragment &(parsed "mailto:a@b.com?subject=hi#x"))
+        "an opaque URI’s fragment is parsed")
+      (assert-equal test
+        &(the (Maybe String) (Nothing))
+        (path &(parsed "mailto:a@b.com?subject=hi#x"))
+        "an opaque URI still has no path")
+      (assert-equal test
+        &(Just @"isbn:0451450523")
+        (opaque &(parsed "urn:isbn:0451450523?q=1"))
+        "colons in the opaque part survive the query split")
+      (assert-equal test
+        &(Just @"+1-555")
+        (opaque &(parsed "tel:+1-555#f"))
+        "a fragment is split off an opaque part without a query")
+      (assert-equal test
+        &(the (Maybe String) (Nothing))
+        (query &(parsed "tel:+1-555#f"))
+        "a fragment alone leaves the query undefined")
+      (assert-equal test
+        &(Just @"text/plain,hello")
+        (opaque &(parsed "data:text/plain,hello?a=b#c"))
+        "a data URI’s payload stops at the query")
+      (assert-equal test
+        &(Just @"")
+        (opaque &(parsed "mailto:?to=x"))
+        "a URI that is all query has an empty opaque part")
+      (assert-equal test
+        &(Just @"to=x")
+        (query &(parsed "mailto:?to=x"))
+        "a query directly after the colon is parsed")
+      (assert-equal test
+        &(Just @"f")
+        (fragment &(parsed "urn:#f"))
+        "a fragment directly after the colon is parsed")
+      (assert-equal test
+        &(Just @"f?q=1")
+        (fragment &(parsed "tel:+1#f?q=1"))
+        "a ? after the # belongs to the fragment")
+      (assert-equal test
+        &(Just @"b?c")
+        (query &(parsed "mailto:a?b?c"))
+        "only the first ? splits the query")
+      (assert-equal test
+        &(Just @"a%3Fb%23c")
+        (opaque &(parsed "mailto:a%3Fb%23c"))
+        "percent-encoded delimiters stay in the opaque part")
+      (assert-equal test
+        "mailto:a@b.com?subject=hi#x"
+        &(str &(parsed "mailto:a@b.com?subject=hi#x"))
+        "an opaque URI with a query and a fragment round-trips")
+      (assert-equal test
+        "mailto:?to=x"
+        &(str &(parsed "mailto:?to=x"))
+        "an empty opaque part with a query round-trips")
+      (assert-equal test
+        "urn:#f"
+        &(str &(parsed "urn:#f"))
+        "an empty opaque part with a fragment round-trips")
+      (assert-equal test
+        "tel:+1#f?q=1"
+        &(str &(parsed "tel:+1#f?q=1"))
+        "a fragment holding a ? round-trips")
+      (assert-equal test
+        &[@"x" @"y"]
+        &(query-values &(parsed "mailto:a@b?to=x&to=y") "to")
+        "query parameters are readable on an opaque URI")
+      (assert-equal test
+        "mailto:a@b?y"
+        &(resolved-against "mailto:a@b?x=1" "?y")
+        "a query reference replaces an opaque base’s query")
+      (assert-equal test
+        "mailto:a@b?x=1#f"
+        &(resolved-against "mailto:a@b?x=1" "#f")
+        "a fragment reference inherits an opaque base’s query")
+      (assert-equal test
+        "mailto:a@b?y"
+        &(resolved-against "mailto:a@b#g" "?y")
+        "an opaque base’s fragment is dropped when resolving")
+      (assert-equal test
+        "urn:isbn:1?q"
+        &(resolved-against "urn:isbn:1?q#f" "")
+        "an empty reference keeps an opaque base’s query but drops its fragment")
+      (assert-equal test
+        "mailto:a@b/d"
+        &(resolved-against "mailto:a@b/c?x=/y" "d")
+        "a merge prefix stops at the opaque part, not inside the query")
+      (assert-equal test
+        "mailto:a~b?q=~c#f~d"
+        &(normalized-str "MAILTO:a%7Eb?q=%7Ec#f%7Ed")
+        "normalizing reaches an opaque URI’s query and fragment")
+      (assert-equal test
+        "mailto:a?q=%3F"
+        &(normalized-str "mailto:a?q=%3f")
+        "an encoded ? in an opaque URI’s query is not decoded into a delimiter"))))
 
 (defn test-non-ascii []
   (do
@@ -1162,6 +1271,7 @@
       (test-no-use-leak)
       (test-resolve)
       (test-opaque)
+      (test-opaque-query-fragment)
       (test-normalize)
       (test-non-ascii)
       (test-continuation-bytes)]))
