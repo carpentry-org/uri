@@ -31,7 +31,7 @@
         (port &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the port correctly")
       (assert-equal test
-        &(Just @"path")
+        &(Just @"/path")
         (path &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the path correctly")
       (assert-equal test
@@ -113,7 +113,7 @@
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
       (assert-equal test
-        &(Just @"")
+        &(Just @"/")
         (path &(unsafe-from-success (URI.parse "/")))
         "we can parse relative URIs")
       ; an authority directly followed by ?query or #fragment (no path between)
@@ -159,7 +159,7 @@
         (nothing? (port &(unsafe-from-success (URI.parse "http://a.com:#f"))))
         "an empty port before a fragment is Nothing, not 0")
       (assert-equal test
-        &(Just @"x")
+        &(Just @"/x")
         (path &(unsafe-from-success (URI.parse "http://a.com:/x")))
         "a path after an empty port is still captured")
       (assert-equal test
@@ -521,6 +521,56 @@
         &(round-trip "http://a.com")
         "a scheme and an authority with no path gain no trailing slash"))))
 
+(def round-trip-corpus
+  [@"http://a/b"
+   @"http://a/"
+   @"http://a"
+   @"http://a//b"
+   @"http://a//"
+   @"http://a/b//c"
+   @"http://a//b//c/"
+   @"//a//b"
+   @"//a.com"
+   @"//a.com/x"
+   @"//usr:pw@a.com:99/x"
+   @"//user@/x"
+   @"//"
+   @"//b"
+   @"///x"
+   @"////x"
+   @"file:///etc/hosts"
+   @"file:////net/x"
+   @"file:/etc/hosts"
+   @"http:/foo"
+   @"a"
+   @"a/b"
+   @"a/b/"
+   @"./a"
+   @"../a"
+   @"."
+   @".."
+   @"/"
+   @"/a/b"
+   @"/a//b"
+   @"mailto:x@y"
+   @"http://a/b?q#f"
+   @"http://a/%2F/b"
+   @"?q=1"
+   @"#f"
+   @""])
+
+(defn check-round-trips [state uris]
+  (Array.reduce
+    &(fn [st u]
+      (assert-equal &st u &(round-trip u) &(fmt "round-trip \"%s\"" u)))
+    @state
+    uris))
+
+(defn test-round-trip-identity []
+  (do
+    (IO.println "## Round-trip identity")
+    (with-test test (check-round-trips test &round-trip-corpus))))
+
 (defn fp [s] (full-path &(unsafe-from-success (URI.parse s))))
 
 (defn test-full-path []
@@ -853,7 +903,7 @@
     (IO.println "## Non-ASCII input")
     (with-test test
       (assert-equal test
-        &(Just @"café")
+        &(Just @"/café")
         (path &(parsed "http://example.com/café?q=1#f"))
         "a non-ASCII path is extracted whole")
       (assert-equal test
@@ -966,7 +1016,7 @@
         (host &(parsed &(fmt "http://%s/x" &(conts))))
         "a host of pure continuation bytes parses")
       (assert-equal test
-        &(Just @"x")
+        &(Just @"/x")
         (path &(parsed &(fmt "http://%s/x" &(conts))))
         "a path after a continuation-byte host parses")
       (assert-equal test
@@ -1007,7 +1057,7 @@
         &(resolved-str &(fmt "/%s" &(conts)))
         "a continuation-byte absolute reference resolves")
       (assert-equal test
-        &(Just @"a/b")
+        &(Just @"/a/b")
         (path &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
         "dot segments are still removed under a continuation-byte host")
       (assert-equal test
@@ -1015,7 +1065,7 @@
         (host &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
         "normalizing keeps a continuation-byte host")
       (assert-equal test
-        &(Just (fmt "%s/b" &(conts)))
+        &(Just (fmt "/%s/b" &(conts)))
         (path &(normalize &(parsed &(fmt "http://a.com/%s/./b" &(conts)))))
         "normalizing keeps a continuation-byte path segment")
       (assert-equal test
@@ -1040,6 +1090,7 @@
       (test-query-multimap)
       (test-stringification)
       (test-round-trip)
+      (test-round-trip-identity)
       (test-full-path)
       (test-remove-dot-segments)
       (test-no-use-leak)
