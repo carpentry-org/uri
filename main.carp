@@ -117,8 +117,13 @@ yields `/`.
 ```
 ")
   (defn full-path [u]
-    (let [q (from @(query u) @"")]
-      (concat &[@"/" (from @(path u) @"") (if (String.empty? &q) @"" @"?") q])))
+    (let [q (from @(query u) @"")
+          pth (from @(path u) @"")]
+      (concat
+        &[@(if (starts-with-byte? &pth \/) "" "/")
+          pth
+          (if (String.empty? &q) @"" @"?")
+          q])))
 
   (doc absolute? "checks whether a URI `u` is absolute.")
   (defn absolute? [u] (just? (scheme u)))
@@ -155,8 +160,6 @@ string.
           h @(host u)
           p @(port u)
           pth (from @(path u) @"")
-          ; paths are parsed without their leading slash
-          slash? (and (just? (path u)) (not (starts-with-byte? &pth \/)))
           f @(fragment u)]
       (concat
         &[(from (apply s &(fn [s] (concat &[s @":"]))) @"")
@@ -168,7 +171,6 @@ string.
             (apply p
                    &(fn [p] (if (default-port? u) @"" (concat &[@":" (str p)]))))
             @"")
-          @(if slash? "/" "")
           pth
           (from (apply q &(fn [q] (concat &[@"?" q]))) @"")
           (from (apply f &(fn [f] (concat &[@"#" f]))) @"")])))
@@ -477,7 +479,7 @@ This is the inverse of `query-map-from-str`.")
     (cond
       (end? &p) res
       (= (nxt &p) \/) (parse-authority (adv &p) res)
-      (parse-path (adv &p) res)))
+      (parse-path p res)))
 
   (defn parse-relative [p res]
     (if (end? &p)
@@ -534,7 +536,7 @@ This is the inverse of `query-map-from-str`.")
                             (parse-query @&p r)
                             \#
                             (parse-fragment @&p r)
-                            (parse-path (adv &p) r))))
+                            (parse-path @&p r))))
               (break))
           (do
             (set! res
@@ -546,7 +548,7 @@ This is the inverse of `query-map-from-str`.")
 
   (defn parse-host [p res]
     (if (= (c &p) \/)
-      (parse-path p res)
+      (parse-path p (map-uri res (fn [res] (set-host res (Just @"")))))
       (let-do [bracket-flag false
                st @(offset &p)
                pref &p]
@@ -581,7 +583,7 @@ This is the inverse of `query-map-from-str`.")
                               (parse-query @&p r)
                               \#
                               (parse-fragment @&p r)
-                              (parse-path (adv &p) r))))
+                              (parse-path @&p r))))
                 (break))
             (do
               (when (= (c &p) \[) (set! bracket-flag true))
@@ -737,27 +739,16 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
               (set! i j)))))
       (concat &output)))
 
-  (private normalize-path)
-  (hidden normalize-path)
-  ; N.B. This relies on the parser storing paths without a leading `/` (the
-  ; parser strips it). If that invariant changes, the prepend/strip pattern
-  ; here would need updating.
-  (defn normalize-path [stored-path]
-    (let [full (concat &[@"/" @stored-path])
-          cleaned (remove-dot-segments &full)
-          clen (length &cleaned)]
-      (if (starts-with-byte? &cleaned \/) (byte-slice &cleaned 1 clen) cleaned)))
-
   (private merge-paths)
   (hidden merge-paths)
   (defn merge-paths [base ref-path]
     (if (and (just? (host base)) (empty? &(from @(path base) @"")))
       (concat &[@"/" @ref-path])
-      (let-do [base-path (concat &[@"/" (from @(path base) @"")])
-               last-slash 0]
+      (let-do [base-path (from @(path base) (from @(opaque base) @""))
+               prefix-len 0]
         (for [i 0 (length &base-path)]
-          (when (= (char-at &base-path i) \/) (set! last-slash i)))
-        (concat &[(byte-slice &base-path 0 (inc last-slash)) @ref-path]))))
+          (when (= (char-at &base-path i) \/) (set! prefix-len (inc i))))
+        (concat &[(byte-slice &base-path 0 prefix-len) @ref-path]))))
 
   (doc resolve "resolves a URI reference string `ref-str` against a base URI
 `base`, following RFC 3986 section 5. Returns the resolved absolute URI, or an
@@ -782,7 +773,7 @@ error if the reference string cannot be parsed.
                 (init @(scheme &r)
                       @(host &r)
                       @(port &r)
-                      (apply @(path &r) &(fn [p] (normalize-path &p)))
+                      (apply @(path &r) &(fn [p] (remove-dot-segments &p)))
                       @(query &r)
                       @(user &r)
                       @(password &r)
@@ -792,7 +783,7 @@ error if the reference string cannot be parsed.
                 (init @(scheme base)
                       @(host &r)
                       @(port &r)
-                      (apply @(path &r) &(fn [p] (normalize-path &p)))
+                      (apply @(path &r) &(fn [p] (remove-dot-segments &p)))
                       @(query &r)
                       @(user &r)
                       @(password &r)
@@ -809,14 +800,8 @@ error if the reference string cannot be parsed.
                       @(fragment &r)
                       @(opaque base))
               (let [r-path (from @(path &r) @"")
-                    target-path (if ref-path-abs
-                      (normalize-path &r-path)
-                      (let [merged (merge-paths base &r-path)
-                            cleaned (remove-dot-segments &merged)
-                            clen (length &cleaned)]
-                        (if (starts-with-byte? &cleaned \/)
-                          (byte-slice &cleaned 1 clen)
-                          cleaned)))]
+                    target-path (remove-dot-segments
+                      &(if ref-path-abs @&r-path (merge-paths base &r-path)))]
                 (init @(scheme base)
                       @(host base)
                       @(port base)
@@ -935,7 +920,7 @@ security checks should account for.
           usr (apply @(user u) &(fn [x] (normalize-pct &x false)))
           pwd (apply @(password u) &(fn [x] (normalize-pct &x false)))
           pth (apply @(path u)
-                     &(fn [p] (normalize-path &(normalize-pct &p false))))
+                     &(fn [p] (remove-dot-segments &(normalize-pct &p false))))
           qry (apply @(query u) &(fn [x] (normalize-pct &x false)))
           frg (apply @(fragment u) &(fn [x] (normalize-pct &x false)))
           opq (apply @(opaque u) &(fn [x] (normalize-pct &x false)))]
@@ -958,7 +943,8 @@ work with, or an error type if the URI string was invalid.
 
 If you have a URI value the simplest operation is probably converting the URI
 back to a string using the `str` interface, which should be idempotent—i.e.
-you’ll get the original URI back.
+you’ll get the original URI back. Components are stored exactly as they were
+written, so `path` keeps its leading `/`.
 
 You can also ask the `URI` for its properties, like the scheme, the port, or the
 URI parameters.

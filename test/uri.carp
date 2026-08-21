@@ -31,7 +31,7 @@
         (port &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the port correctly")
       (assert-equal test
-        &(Just @"path")
+        &(Just @"/path")
         (path &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the path correctly")
       (assert-equal test
@@ -113,7 +113,7 @@
         (fragment &(unsafe-from-success (URI.parse uri)))
         "we can parse and get the fragment correctly")
       (assert-equal test
-        &(Just @"")
+        &(Just @"/")
         (path &(unsafe-from-success (URI.parse "/")))
         "we can parse relative URIs")
       ; an authority directly followed by ?query or #fragment (no path between)
@@ -159,7 +159,7 @@
         (nothing? (port &(unsafe-from-success (URI.parse "http://a.com:#f"))))
         "an empty port before a fragment is Nothing, not 0")
       (assert-equal test
-        &(Just @"x")
+        &(Just @"/x")
         (path &(unsafe-from-success (URI.parse "http://a.com:/x")))
         "a path after an empty port is still captured")
       (assert-equal test
@@ -521,6 +521,56 @@
         &(round-trip "http://a.com")
         "a scheme and an authority with no path gain no trailing slash"))))
 
+(def round-trip-corpus
+  [@"http://a/b"
+   @"http://a/"
+   @"http://a"
+   @"http://a//b"
+   @"http://a//"
+   @"http://a/b//c"
+   @"http://a//b//c/"
+   @"//a//b"
+   @"//a.com"
+   @"//a.com/x"
+   @"//usr:pw@a.com:99/x"
+   @"//user@/x"
+   @"//"
+   @"//b"
+   @"///x"
+   @"////x"
+   @"file:///etc/hosts"
+   @"file:////net/x"
+   @"file:/etc/hosts"
+   @"http:/foo"
+   @"a"
+   @"a/b"
+   @"a/b/"
+   @"./a"
+   @"../a"
+   @"."
+   @".."
+   @"/"
+   @"/a/b"
+   @"/a//b"
+   @"mailto:x@y"
+   @"http://a/b?q#f"
+   @"http://a/%2F/b"
+   @"?q=1"
+   @"#f"
+   @""])
+
+(defn check-round-trips [state uris]
+  (Array.reduce
+    &(fn [st u]
+      (assert-equal &st u &(round-trip u) &(fmt "round-trip \"%s\"" u)))
+    @state
+    uris))
+
+(defn test-round-trip-identity []
+  (do
+    (IO.println "## Round-trip identity")
+    (with-test test (check-round-trips test &round-trip-corpus))))
+
 (defn fp [s] (full-path &(unsafe-from-success (URI.parse s))))
 
 (defn test-full-path []
@@ -556,15 +606,18 @@
 
 (defn resolved-str [ref-str] (resolved-against base-uri ref-str))
 
-(defn check-resolutions [state rows]
+(defn check-resolutions-against [state base-str rows]
   (Array.reduce
     &(fn [st row]
       (assert-equal &st
         (Pair.b row)
-        &(resolved-str (Pair.a row))
-        &(fmt "resolve \"%s\"" (Pair.a row))))
+        &(resolved-against base-str (Pair.a row))
+        &(fmt "resolve \"%s\" against \"%s\"" (Pair.a row) base-str)))
     @state
     rows))
+
+(defn check-resolutions [state rows]
+  (check-resolutions-against state base-uri rows))
 
 ; RFC 3986 section 5.4.1, normal examples
 (def rfc-normal
@@ -627,6 +680,42 @@
    (Pair.init @"//g?y" @"http://g?y")
    (Pair.init @"//g/p" @"http://g/p")])
 
+; RFC 3986 section 5.2.3: a base path with no / contributes an empty merge prefix
+(def no-slash-base-refs
+  [(Pair.init @"g" @"g")
+   (Pair.init @"./g" @"g")
+   (Pair.init @"../g" @"g")
+   (Pair.init @"g/./h" @"g/h")
+   (Pair.init @"a/b" @"a/b")
+   (Pair.init @";x" @";x")
+   (Pair.init @"." @"")])
+
+; RFC 3986 section 3.3: a scheme:rootless base path merges like any other path
+(def rootless-base-refs
+  [(Pair.init @"g" @"s:a/g")
+   (Pair.init @"./g" @"s:a/g")
+   (Pair.init @"../g" @"s:/g")
+   (Pair.init @".." @"s:/")
+   (Pair.init @"." @"s:a/")
+   (Pair.init @"./" @"s:a/")
+   (Pair.init @"g/./h" @"s:a/g/h")
+   (Pair.init @"g/../h" @"s:a/h")
+   (Pair.init @"/g" @"s:/g")
+   (Pair.init @"//h/g" @"s://h/g")
+   (Pair.init @"" @"s:a/b")
+   (Pair.init @"?y" @"s:a/b?y")
+   (Pair.init @"#s" @"s:a/b#s")
+   (Pair.init @"g:h" @"g:h")
+   (Pair.init @"a/b" @"s:a/a/b")
+   (Pair.init @";x" @"s:a/;x")])
+
+(def rootless-dir-base-refs
+  [(Pair.init @"g" @"s:a/b/g")
+   (Pair.init @"." @"s:a/b/")
+   (Pair.init @".." @"s:a/")
+   (Pair.init @"../g" @"s:a/g")
+   (Pair.init @"../.." @"s:/")])
+
 (defn test-resolve []
   (do
     (IO.println "## Resolve (RFC 3986 Section 5.4)")
@@ -635,6 +724,33 @@
       (check-resolutions test &rfc-abnormal)
       (check-resolutions test &absolute-path-refs)
       (check-resolutions test &network-path-refs)
+      (check-resolutions-against test "a" &no-slash-base-refs)
+      (check-resolutions-against test "s:a/b" &rootless-base-refs)
+      (check-resolutions-against test "s:a/b/" &rootless-dir-base-refs)
+      (assert-equal test
+        "mailto:a/g"
+        &(resolved-against "mailto:a/b@x" "g")
+        "a mailto: base merges the prefix of its rootless path")
+      (assert-equal test
+        "mailto:/g"
+        &(resolved-against "mailto:a/b@x" "../g")
+        "a mailto: base pops a segment off its rootless path")
+      (assert-equal test
+        "urn:g"
+        &(resolved-against "urn:isbn:0451450523" "g")
+        "a rootless base with no slash contributes an empty prefix")
+      (assert-equal test
+        "javascript:/"
+        &(resolved-against "javascript:a/b" "..")
+        "a javascript: base pops its only segment")
+      (assert-equal test
+        "s:g"
+        &(resolved-against "s:" "g")
+        "an empty rootless base contributes an empty prefix")
+      (assert-equal test
+        "a/g"
+        &(resolved-against "a/b" "g")
+        "a relative base with a slash keeps its prefix")
       (assert-equal test
         "http://a/"
         &(resolved-against "http://a" "/")
@@ -853,7 +969,7 @@
     (IO.println "## Non-ASCII input")
     (with-test test
       (assert-equal test
-        &(Just @"café")
+        &(Just @"/café")
         (path &(parsed "http://example.com/café?q=1#f"))
         "a non-ASCII path is extracted whole")
       (assert-equal test
@@ -966,7 +1082,7 @@
         (host &(parsed &(fmt "http://%s/x" &(conts))))
         "a host of pure continuation bytes parses")
       (assert-equal test
-        &(Just @"x")
+        &(Just @"/x")
         (path &(parsed &(fmt "http://%s/x" &(conts))))
         "a path after a continuation-byte host parses")
       (assert-equal test
@@ -1007,7 +1123,7 @@
         &(resolved-str &(fmt "/%s" &(conts)))
         "a continuation-byte absolute reference resolves")
       (assert-equal test
-        &(Just @"a/b")
+        &(Just @"/a/b")
         (path &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
         "dot segments are still removed under a continuation-byte host")
       (assert-equal test
@@ -1015,7 +1131,7 @@
         (host &(normalize &(parsed &(fmt "http://%s/a/./b" &(conts)))))
         "normalizing keeps a continuation-byte host")
       (assert-equal test
-        &(Just (fmt "%s/b" &(conts)))
+        &(Just (fmt "/%s/b" &(conts)))
         (path &(normalize &(parsed &(fmt "http://a.com/%s/./b" &(conts)))))
         "normalizing keeps a continuation-byte path segment")
       (assert-equal test
@@ -1040,6 +1156,7 @@
       (test-query-multimap)
       (test-stringification)
       (test-round-trip)
+      (test-round-trip-identity)
       (test-full-path)
       (test-remove-dot-segments)
       (test-no-use-leak)
