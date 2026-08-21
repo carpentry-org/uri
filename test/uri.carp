@@ -606,15 +606,18 @@
 
 (defn resolved-str [ref-str] (resolved-against base-uri ref-str))
 
-(defn check-resolutions [state rows]
+(defn check-resolutions-against [state base-str rows]
   (Array.reduce
     &(fn [st row]
       (assert-equal &st
         (Pair.b row)
-        &(resolved-str (Pair.a row))
-        &(fmt "resolve \"%s\"" (Pair.a row))))
+        &(resolved-against base-str (Pair.a row))
+        &(fmt "resolve \"%s\" against \"%s\"" (Pair.a row) base-str)))
     @state
     rows))
+
+(defn check-resolutions [state rows]
+  (check-resolutions-against state base-uri rows))
 
 ; RFC 3986 section 5.4.1, normal examples
 (def rfc-normal
@@ -677,6 +680,16 @@
    (Pair.init @"//g?y" @"http://g?y")
    (Pair.init @"//g/p" @"http://g/p")])
 
+; RFC 3986 section 5.2.3: a base path with no / contributes an empty merge prefix
+(def no-slash-base-refs
+  [(Pair.init @"g" @"g")
+   (Pair.init @"./g" @"g")
+   (Pair.init @"../g" @"g")
+   (Pair.init @"g/./h" @"g/h")
+   (Pair.init @"a/b" @"a/b")
+   (Pair.init @";x" @";x")
+   (Pair.init @"." @"")])
+
 (defn test-resolve []
   (do
     (IO.println "## Resolve (RFC 3986 Section 5.4)")
@@ -685,6 +698,11 @@
       (check-resolutions test &rfc-abnormal)
       (check-resolutions test &absolute-path-refs)
       (check-resolutions test &network-path-refs)
+      (check-resolutions-against test "a" &no-slash-base-refs)
+      (assert-equal test
+        "a/g"
+        &(resolved-against "a/b" "g")
+        "a relative base with a slash keeps its prefix")
       (assert-equal test
         "http://a/"
         &(resolved-against "http://a" "/")

@@ -745,10 +745,10 @@ of the quadratic slicing a literal transcription of the RFC would incur.")
     (if (and (just? (host base)) (empty? &(from @(path base) @"")))
       (concat &[@"/" @ref-path])
       (let-do [base-path (from @(path base) @"")
-               last-slash 0]
+               prefix-len 0]
         (for [i 0 (length &base-path)]
-          (when (= (char-at &base-path i) \/) (set! last-slash i)))
-        (concat &[(byte-slice &base-path 0 (inc last-slash)) @ref-path]))))
+          (when (= (char-at &base-path i) \/) (set! prefix-len (inc i))))
+        (concat &[(byte-slice &base-path 0 prefix-len) @ref-path]))))
 
   (doc resolve "resolves a URI reference string `ref-str` against a base URI
 `base`, following RFC 3986 section 5. Returns the resolved absolute URI, or an
