@@ -550,88 +550,103 @@
 
 (def base-uri "http://a/b/c/d;p?q")
 
-(defn resolved-str [ref-str]
-  (let [base (unsafe-from-success (URI.parse base-uri))]
+(defn resolved-against [base-str ref-str]
+  (let [base (unsafe-from-success (URI.parse base-str))]
     (str &(unsafe-from-success (URI.resolve &base ref-str)))))
+
+(defn resolved-str [ref-str] (resolved-against base-uri ref-str))
+
+(defn check-resolutions [state rows]
+  (Array.reduce
+    &(fn [st row]
+      (assert-equal &st
+        (Pair.b row)
+        &(resolved-str (Pair.a row))
+        &(fmt "resolve \"%s\"" (Pair.a row))))
+    @state
+    rows))
+
+; RFC 3986 section 5.4.1, normal examples
+(def rfc-normal
+  [(Pair.init @"g:h" @"g:h")
+   (Pair.init @"g" @"http://a/b/c/g")
+   (Pair.init @"./g" @"http://a/b/c/g")
+   (Pair.init @"g/" @"http://a/b/c/g/")
+   (Pair.init @"/g" @"http://a/g")
+   (Pair.init @"//g" @"http://g")
+   (Pair.init @"?y" @"http://a/b/c/d;p?y")
+   (Pair.init @"g?y" @"http://a/b/c/g?y")
+   (Pair.init @"#s" @"http://a/b/c/d;p?q#s")
+   (Pair.init @"g#s" @"http://a/b/c/g#s")
+   (Pair.init @"g?y#s" @"http://a/b/c/g?y#s")
+   (Pair.init @";x" @"http://a/b/c/;x")
+   (Pair.init @"g;x" @"http://a/b/c/g;x")
+   (Pair.init @"g;x?y#s" @"http://a/b/c/g;x?y#s")
+   (Pair.init @"" @"http://a/b/c/d;p?q")
+   (Pair.init @"." @"http://a/b/c/")
+   (Pair.init @"./" @"http://a/b/c/")
+   (Pair.init @".." @"http://a/b/")
+   (Pair.init @"../" @"http://a/b/")
+   (Pair.init @"../g" @"http://a/b/g")
+   (Pair.init @"../.." @"http://a/")
+   (Pair.init @"../../" @"http://a/")
+   (Pair.init @"../../g" @"http://a/g")])
+
+; RFC 3986 section 5.4.2, abnormal examples
+(def rfc-abnormal
+  [(Pair.init @"../../../g" @"http://a/g")
+   (Pair.init @"../../../../g" @"http://a/g")
+   (Pair.init @"/./g" @"http://a/g")
+   (Pair.init @"/../g" @"http://a/g")
+   (Pair.init @"g." @"http://a/b/c/g.")
+   (Pair.init @".g" @"http://a/b/c/.g")
+   (Pair.init @"g.." @"http://a/b/c/g..")
+   (Pair.init @"..g" @"http://a/b/c/..g")
+   (Pair.init @"./../g" @"http://a/b/g")
+   (Pair.init @"./g/." @"http://a/b/c/g/")
+   (Pair.init @"g/./h" @"http://a/b/c/g/h")
+   (Pair.init @"g/../h" @"http://a/b/c/h")
+   (Pair.init @"g;x=1/./y" @"http://a/b/c/g;x=1/y")
+   (Pair.init @"g;x=1/../y" @"http://a/b/c/y")
+   (Pair.init @"g?y/./x" @"http://a/b/c/g?y/./x")
+   (Pair.init @"g?y/../x" @"http://a/b/c/g?y/../x")
+   (Pair.init @"g#s/./x" @"http://a/b/c/g#s/./x")
+   (Pair.init @"g#s/../x" @"http://a/b/c/g#s/../x")
+   (Pair.init @"http:g" @"http:g")])
+
+; absolute-path references, which the section 5.4 tables do not cover
+(def absolute-path-refs
+  [(Pair.init @"/" @"http://a/")
+   (Pair.init @"/?y" @"http://a/?y")
+   (Pair.init @"/#f" @"http://a/#f")
+   (Pair.init @"/?y#f" @"http://a/?y#f")])
+
+; network-path references, which section 5.4 covers only as //g
+(def network-path-refs
+  [(Pair.init @"//g/" @"http://g/")
+   (Pair.init @"//g?y" @"http://g?y")
+   (Pair.init @"//g/p" @"http://g/p")])
 
 (defn test-resolve []
   (do
     (IO.println "## Resolve (RFC 3986 Section 5.4)")
     (with-test test
-      (assert-equal test "http://a/b/c/g" &(resolved-str "g") "resolve g")
-      (assert-equal test "http://a/b/c/g" &(resolved-str "./g") "resolve ./g")
-      (assert-equal test "http://a/b/c/g/" &(resolved-str "g/") "resolve g/")
-      (assert-equal test "http://a/g" &(resolved-str "/g") "resolve /g")
-      (assert-equal test "http://g/p" &(resolved-str "//g/p") "resolve //g/p")
-      (assert-equal test "http://a/b/c/d;p?y" &(resolved-str "?y") "resolve ?y")
-      (assert-equal test "http://a/b/c/g?y" &(resolved-str "g?y") "resolve g?y")
+      (check-resolutions test &rfc-normal)
+      (check-resolutions test &rfc-abnormal)
+      (check-resolutions test &absolute-path-refs)
+      (check-resolutions test &network-path-refs)
       (assert-equal test
-        "http://a/b/c/d;p?q#s"
-        &(resolved-str "#s")
-        "resolve #s")
-      (assert-equal test "http://a/b/c/g#s" &(resolved-str "g#s") "resolve g#s")
+        "http://a/"
+        &(resolved-against "http://a" "/")
+        "resolve / against a base with no path")
       (assert-equal test
-        "http://a/b/c/g?y#s"
-        &(resolved-str "g?y#s")
-        "resolve g?y#s")
-      (assert-equal test "http://a/b/c/;x" &(resolved-str ";x") "resolve ;x")
-      (assert-equal test "http://a/b/c/g;x" &(resolved-str "g;x") "resolve g;x")
+        "http://a"
+        &(resolved-against "http://a" "")
+        "resolve the empty reference against a base with no path")
       (assert-equal test
-        "http://a/b/c/g;x?y#s"
-        &(resolved-str "g;x?y#s")
-        "resolve g;x?y#s")
-      (assert-equal test "http://a/b/c/d;p?q" &(resolved-str "") "resolve empty")
-      (assert-equal test "http://a/b/c/" &(resolved-str ".") "resolve .")
-      (assert-equal test "http://a/b/c/" &(resolved-str "./") "resolve ./")
-      (assert-equal test "http://a/b/" &(resolved-str "..") "resolve ..")
-      (assert-equal test "http://a/b/" &(resolved-str "../") "resolve ../")
-      (assert-equal test "http://a/b/g" &(resolved-str "../g") "resolve ../g")
-      (assert-equal test "http://a/" &(resolved-str "../..") "resolve ../..")
-      (assert-equal test "http://a/" &(resolved-str "../../") "resolve ../../")
-      (assert-equal test
-        "http://a/g"
-        &(resolved-str "../../g")
-        "resolve ../../g")
-      (assert-equal test
-        "http://a/g"
-        &(resolved-str "../../../g")
-        "resolve ../../../g")
-      (assert-equal test
-        "http://a/g"
-        &(resolved-str "../../../../g")
-        "resolve ../../../../g")
-      (assert-equal test
-        "http://a/b/c/g."
-        &(resolved-str "g.")
-        "resolve g. (dot is part of segment)")
-      (assert-equal test
-        "http://a/b/c/.g"
-        &(resolved-str ".g")
-        "resolve .g (dot is part of segment)")
-      (assert-equal test
-        "http://a/b/c/g.."
-        &(resolved-str "g..")
-        "resolve g.. (dots are part of segment)")
-      (assert-equal test
-        "http://a/b/c/..g"
-        &(resolved-str "..g")
-        "resolve ..g (dots are part of segment)")
-      (assert-equal test
-        "http://a/b/c/g?y/./x"
-        &(resolved-str "g?y/./x")
-        "resolve g?y/./x (dots in query are literal)")
-      (assert-equal test
-        "http://a/b/c/g?y/../x"
-        &(resolved-str "g?y/../x")
-        "resolve g?y/../x (dots in query are literal)")
-      (assert-equal test
-        "http://a/b/c/g#s/./x"
-        &(resolved-str "g#s/./x")
-        "resolve g#s/./x (dots in fragment are literal)")
-      (assert-equal test
-        "http://a/b/c/g#s/../x"
-        &(resolved-str "g#s/../x")
-        "resolve g#s/../x (dots in fragment are literal)"))))
+        "http://a?y"
+        &(resolved-against "http://a" "?y")
+        "resolve ?y against a base with no path"))))
 
 (defn test-opaque []
   (do
