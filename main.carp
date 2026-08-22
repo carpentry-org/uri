@@ -475,6 +475,31 @@ This is the inverse of `query-map-from-str`.")
                 (set! p (adv &p)))))
       res))
 
+  (defn parse-opaque [po res]
+    (let-do [p (adv &po)
+             pref &p
+             st @(offset &p)]
+      (while true
+        (cond
+          (end? &p)
+            (do
+              (set! res
+                    (map-uri res
+                             (fn [res] (set-opaque res (Just (from pref st))))))
+              (break))
+          (or (= (c &p) \?) (= (c &p) \#))
+            (do
+              (set! res
+                    (let [r (map-uri res
+                                     (fn [res]
+                                       (set-opaque res (Just (from pref st)))))]
+                      (if (= (c &p) \?)
+                        (parse-query @&p r)
+                        (parse-fragment @&p r))))
+              (break))
+          (set! p (adv &p))))
+      res))
+
   (defn parse-relative-slash [p res]
     (cond
       (end? &p) res
@@ -656,16 +681,7 @@ This is the inverse of `query-map-from-str`.")
                                                                 &(fn [x] (+ x 2)))
                                                  res))
                   (break))
-                (do
-                  (set! res
-                        (map-uri res
-                                 (fn [res]
-                                   (set-opaque res
-                                               (Just
-                                                 (byte-slice (source pref)
-                                                             (inc @(offset pref))
-                                                             (length (source pref))))))))
-                  (break))))
+                (do (set! res (parse-opaque @&p res)) (break))))
           (do (set! res (parse-no-scheme (set-offset @&p 0) res)) (break))))
       res))
 
