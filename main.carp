@@ -633,7 +633,7 @@ This is the inverse of `query-map-from-str`.")
                                                            (Just (from pref st)))
                                              (set-user res (Just (from pref st))))))))
               (break))
-          (= (c &p) \:)
+          (and (= (c &p) \:) (not pw-flag))
             (do
               (set! res
                     (map-uri res (fn [res] (set-user res (Just (from pref st))))))
