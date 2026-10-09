@@ -5,7 +5,7 @@ is a `URI` datatype and parser for Carp.
 ## Installation
 
 ```clojure
-(load "git@github.com:carpentry-org/uri@0.6.0")
+(load "git@github.com:carpentry-org/uri@0.6.1")
 ```
 
 ## Usage
