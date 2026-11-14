@@ -104,6 +104,14 @@
         &(unsafe-from-success (query-map-from-str "a&&b"))
         "query-map-from-str skips a doubled empty segment")
       (assert-equal test
+        &{@"" @"v"}
+        &(unsafe-from-success (query-map-from-str "=v"))
+        "query-map-from-str reads a leading = as an empty key")
+      (assert-equal test
+        &(the (Map String String) {})
+        &(unsafe-from-success (query-map-from-str ""))
+        "query-map-from-str maps an empty string to an empty map")
+      (assert-equal test
         &{@"flag" @""}
         &(unsafe-from-success
           (query-map &(unsafe-from-success (URI.parse "http://foo.com/?flag"))))
@@ -419,6 +427,10 @@
         (= &{@"a" [@"1" @"2"]
              @"b" [@"x"]} &(multimap-of "a=1&b=x&a=2"))
         "query-multimap-from-str keeps repeated and single keys together")
+      (assert-true test
+        (= &{@"a" [@"1"]
+             @"b" [@"2" @"3"]} &(multimap-of "a=1&b=2&b=3"))
+        "query-multimap-from-str appends a repeat to its own key's values")
       (assert-true test
         (= &(the (Map String (Array String)) {}) &(multimap-of ""))
         "query-multimap-from-str maps an empty string to an empty map")
