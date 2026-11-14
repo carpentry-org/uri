@@ -104,6 +104,14 @@
         &(unsafe-from-success (query-map-from-str "a&&b"))
         "query-map-from-str skips a doubled empty segment")
       (assert-equal test
+        &{@"" @"v"}
+        &(unsafe-from-success (query-map-from-str "=v"))
+        "query-map-from-str reads a leading = as an empty key")
+      (assert-equal test
+        &(the (Map String String) {})
+        &(unsafe-from-success (query-map-from-str ""))
+        "query-map-from-str maps an empty string to an empty map")
+      (assert-equal test
         &{@"flag" @""}
         &(unsafe-from-success
           (query-map &(unsafe-from-success (URI.parse "http://foo.com/?flag"))))

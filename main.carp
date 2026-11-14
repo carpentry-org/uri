@@ -214,26 +214,26 @@ string.
   (hidden chartab)
   (def chartab [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \A \B \C \D \E \F])
 
-  (doc escape "URI escapes the string `s`, percent-encoding every byte that is
-not an unreserved ASCII character. Multi-byte UTF-8 characters are encoded one
-byte at a time, so the output is standard, interoperable percent-encoding.")
-  (defn escape [s]
-    (let-do [a []
-             bs (String.to-bytes s)]
+  (defn- escape-into [a s]
+    (let [bs (String.to-bytes s)]
       (for [i 0 (Array.length &bs)]
         (let [n (Byte.to-int @(Array.unsafe-nth &bs i))
               c (from-int n)]
           (if (unreserved? c)
-            (Array.push-back! &a c)
+            (Array.push-back! a c)
             (do
-              (Array.push-back! &a \%)
-              (Array.push-back! &a
+              (Array.push-back! a \%)
+              (Array.push-back! a
                                 @(Array.unsafe-nth &chartab
                                                    (bit-shift-right (bit-and n
                                                                              240)
                                                                     4)))
-              (Array.push-back! &a @(Array.unsafe-nth &chartab (bit-and n 15)))))))
-      (from-chars &a)))
+              (Array.push-back! a @(Array.unsafe-nth &chartab (bit-and n 15)))))))))
+
+  (doc escape "URI escapes the string `s`, percent-encoding every byte that is
+not an unreserved ASCII character. Multi-byte UTF-8 characters are encoded one
+byte at a time, so the output is standard, interoperable percent-encoding.")
+  (defn escape [s] (let-do [a []] (escape-into &a s) (from-chars &a)))
 
   (private nibble-at)
   (hidden nibble-at)
@@ -247,36 +247,53 @@ byte at a time, so the output is standard, interoperable percent-encoding.")
       (or (and (>= c \0) (<= c \9))
           (or (and (>= c \a) (<= c \f)) (and (>= c \A) (<= c \F))))))
 
+  (defn- unescape-range [bs from to]
+    (let-do [a []]
+      (for [i from to]
+        (let [b @(Array.unsafe-nth bs i)]
+          ; 37b is the byte value of `%`; only decode a triplet when both
+          ; following bytes are hex, otherwise copy the `%` through verbatim
+          (if (and (= b 37b)
+                   (and (< (+ i 2) to)
+                        (and (hex-byte? bs (inc i)) (hex-byte? bs (+ i 2)))))
+            (do
+              (Array.push-back! &a
+                                (Byte.from-int
+                                  (bit-or
+                                    (bit-shift-left (nibble-at bs (inc i)) 4)
+                                    (nibble-at bs (+ i 2)))))
+              (set! i (+ i 2)))
+            (Array.push-back! &a b))))
+      (String.from-bytes &a)))
+
   (doc unescape
     "URI unescapes the string `s`, decoding each percent-triplet into
 a single byte and copying all other bytes through verbatim. UTF-8 characters
 that were percent-encoded byte by byte are therefore reassembled correctly.")
   (defn unescape [s]
-    (let-do [a []
-             bs (String.to-bytes s)
-             n (Array.length &bs)]
-      (for [i 0 n]
-        (let [b @(Array.unsafe-nth &bs i)]
-          ; 37b is the byte value of `%`; only decode a triplet when both
-          ; following bytes are hex, otherwise copy the `%` through verbatim
-          (if (and (= b 37b)
-                   (and (< (+ i 2) n)
-                        (and (hex-byte? &bs (inc i)) (hex-byte? &bs (+ i 2)))))
-            (do
-              (Array.push-back! &a
-                                (Byte.from-int
-                                  (bit-or
-                                    (bit-shift-left (nibble-at &bs (inc i)) 4)
-                                    (nibble-at &bs (+ i 2)))))
-              (set! i (+ i 2)))
-            (Array.push-back! &a b))))
-      (String.from-bytes &a)))
+    (let [bs (String.to-bytes s)] (unescape-range &bs 0 (Array.length &bs))))
 
-  (defn- first-eq-index [s]
-    (let-do [len (length s)
-             i 0]
-      (while (and (< i len) (/= (char-at s i) \=)) (set! i (inc i)))
-      (if (= i len) (Nothing) (Just i))))
+  ; the decoded key-value pairs of a querystring, skipping empty segments
+  (defn- query-pairs [s]
+    (let-do [bs (String.to-bytes s)
+             n (Array.length &bs)
+             pairs []
+             start 0
+             eq -1]
+      (for [i 0 (inc n)]
+        ; 38b is `&` and 61b is `=`
+        (if (or (= i n) (= @(Array.unsafe-nth &bs i) 38b))
+          (do
+            (when (< start i)
+              (Array.push-back! &pairs
+                                (if (= eq -1)
+                                  (Pair.init (unescape-range &bs start i) @"")
+                                  (Pair.init (unescape-range &bs start eq)
+                                             (unescape-range &bs (inc eq) i)))))
+            (set! start (inc i))
+            (set! eq -1))
+          (when (and (= eq -1) (= @(Array.unsafe-nth &bs i) 61b)) (set! eq i))))
+      pairs))
 
   (doc query-map-from-str "parses the querystring as a `Map` and returns it,
 percent-decoding keys and values.
@@ -285,25 +302,12 @@ A parameter without a value, such as `flag` in `?flag`, is stored with an empty
 string as its value. Empty segments, such as a trailing or doubled `&`, are
 skipped. The result is wrapped in a `Result` for API compatibility.")
   (defn query-map-from-str [s]
-    (if (= s "")
-      (Success {})
-      (Array.reduce
-        &(fn [a x]
-          (match a
-            (Error err) (Error err)
-            (Success m)
-              (match (first-eq-index x)
-                (Nothing)
-                  (if (String.empty? x)
-                    (Success m)
-                    (let [k (unescape x)
-                          v @""] (Success (Map.put m &k &v))))
-                (Just i)
-                  (let [k (unescape &(byte-slice x 0 i))
-                        v (unescape &(byte-slice x (inc i) (length x)))]
-                    (Success (Map.put m &k &v))))))
-        (the (Result (Map String String) String) (Success {}))
-        &(split-by s &[\&]))))
+    (the (Result (Map String String) String)
+         (Success
+           (Array.reduce
+             &(fn [m p] (Map.put m (Pair.a p) (Pair.b p)))
+             {}
+             &(query-pairs s)))))
 
   (doc query-map "parses the querystring as a `Map` and returns it,
 percent-decoding keys and values.
@@ -313,11 +317,6 @@ string as its value. Empty segments, such as a trailing or doubled `&`, are
 skipped. The result is wrapped in a `Result` for API compatibility.")
   (defn query-map [u]
     (match @(query u) (Nothing) (Success {}) (Just s) (query-map-from-str &s)))
-
-  (defn- multimap-append [m k v]
-    (match (Map.get-maybe &m &k)
-      (Just existing) (Map.put m &k &(Array.push-back existing v))
-      (Nothing) (Map.put m &k &[v])))
 
   (doc query-multimap-from-str "parses the querystring, collecting every value
 for a key into an `Array` in encounter order, and returns the result,
@@ -329,25 +328,25 @@ contributes a single empty-string value. Empty segments, such as a trailing or
 doubled `&`, are skipped. The result is wrapped in a `Result` for API
 compatibility.")
   (defn query-multimap-from-str [s]
-    (if (= s "")
-      (Success {})
-      (Array.reduce
-        &(fn [a x]
-          (match a
-            (Error err) (Error err)
-            (Success m)
-              (match (first-eq-index x)
-                (Nothing)
-                  (if (String.empty? x)
-                    (Success m)
-                    (Success (multimap-append m (unescape x) @"")))
-                (Just i)
-                  (Success
-                    (multimap-append m
-                                     (unescape &(byte-slice x 0 i))
-                                     (unescape &(byte-slice x (inc i) (length x))))))))
-        (the (Result (Map String (Array String)) String) (Success {}))
-        &(split-by s &[\&]))))
+    (let-do [pairs (query-pairs s)
+             groups (the (Array (Pair String (Array String))) [])
+             n 0
+             idx (the (Map String Int) {})]
+      (foreach [p &pairs]
+               (match (Map.get-maybe &idx (Pair.a p))
+                 (Just g)
+                   (Array.push-back! (Pair.b (Array.unsafe-nth &groups g))
+                                     @(Pair.b p))
+                 (Nothing)
+                   (do
+                     (set! idx (Map.put idx (Pair.a p) &n))
+                     (set! n (inc n))
+                     (Array.push-back! &groups
+                                       (Pair.init @(Pair.a p) [@(Pair.b p)])))))
+      (the
+        (Result (Map String (Array String)) String)
+        (Success
+          (Array.reduce &(fn [m g] (Map.put m (Pair.a g) (Pair.b g))) {} &groups)))))
 
   (doc query-multimap "parses the querystring, collecting every value for a key
 into an `Array` in encounter order, and returns the result, percent-decoding
@@ -373,12 +372,17 @@ querystring, percent-encoding keys and values.
 
 This is the inverse of `query-map-from-str`.")
   (defn query-string-from-map [m]
-    (Map.kv-reduce
-      &(fn [acc k v]
-        (let [pair (concat &[(escape k) @"=" (escape v)])]
-          (if (String.empty? &acc) pair (concat &[acc @"&" pair]))))
-      @""
-      m)))
+    (from-chars
+      &(Map.kv-reduce
+        &(fn [a k v]
+          (do
+            (unless (Array.empty? &a) (Array.push-back! &a \&))
+            (escape-into &a k)
+            (Array.push-back! &a \=)
+            (escape-into &a v)
+            a))
+        []
+        m))))
 
 (deftype URIParser [source String
                     offset Int])
