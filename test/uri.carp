@@ -428,6 +428,10 @@
              @"b" [@"x"]} &(multimap-of "a=1&b=x&a=2"))
         "query-multimap-from-str keeps repeated and single keys together")
       (assert-true test
+        (= &{@"a" [@"1"]
+             @"b" [@"2" @"3"]} &(multimap-of "a=1&b=2&b=3"))
+        "query-multimap-from-str appends a repeat to its own key's values")
+      (assert-true test
         (= &(the (Map String (Array String)) {}) &(multimap-of ""))
         "query-multimap-from-str maps an empty string to an empty map")
       (assert-true test
